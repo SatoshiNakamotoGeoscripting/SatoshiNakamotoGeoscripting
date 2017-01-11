@@ -10,9 +10,8 @@
 #     yes if it can be evenly divided by 400, then it is (such as 2000, 2400)
 
 isLeapYear <- function(year) {
-  #Check whether the number is greater than the first date of the Gregorian calendar
-  if (is.numeric(year)) {
-    if (year >= 1582) {
+  if (is.numeric(year)) { 
+    if (year >= 1582) { #Check whether the number is greater than the first date of the Gregorian calendar
       # Condition 1 before OR statement: Check if year can be divided by 400 and not by 100
       # Condition 2 after the OR statement: Check if year can be divided by 4 and by 400
       isLeap <- ifelse(year %% 4 == 0 & year %% 100 != 0 | year %% 4 == 0 & year %% 400 == 0, TRUE, FALSE)
