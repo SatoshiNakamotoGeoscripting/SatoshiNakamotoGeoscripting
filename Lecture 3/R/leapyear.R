@@ -18,9 +18,9 @@ isLeapYear <- function(year) {
       isLeap <- ifelse(year %% 4 == 0 & year %% 100 != 0 | year %% 4 == 0 & year %% 400 == 0, TRUE, FALSE)
       return(isLeap)
     } else {
-      stop(year, " is before the beginning of the Gregorian calendar")
+      warning(year, " is before the beginning of the Gregorian calendar")
     }
   } else {
-    stop("Numeric input expected, got ", class(year))
+    warning("Numeric input expected, got ", class(year))
   }
 }
