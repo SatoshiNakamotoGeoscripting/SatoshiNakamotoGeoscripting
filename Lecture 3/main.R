@@ -10,5 +10,5 @@ source('R/leapyear.R')
 isLeapYear(1820) # Expected output: TRUE
 isLeapYear(2000) # Expected output: FALSE
 isLeapYear(2002) # Expected output: FALSE
-isLeapYear(1581) # Expected output: 1581 is before the beginning of the Gregorian calendar
+isLeapYear(1581) # Expected output: Error in isLeapYear(1581) : 1581 is before the beginning of the Gregorian calendar
 isLeapYear("1581") # Expected output: Error in isLeapYear("1581") : Numeric input expected, got character
