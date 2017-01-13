@@ -67,5 +67,6 @@ LT8_crop <- intersect(LT8_ndvi,LT5_ndvi)
 # 6th: Substraction. By substracting we will be able to see those parts of the image where the NDVI has increased or decreased.
 NDVI_dif = LT8_crop - LT5_crop
 plot(NDVI_dif, main="Difference between 2014's NDVI and 1990's NDVI")
+
 #We create a raster from the last calculation
 writeRaster(x=NDVI_dif, filename="NDVI_differences.tif", datatype='FLT4S',overwrite= TRUE)
