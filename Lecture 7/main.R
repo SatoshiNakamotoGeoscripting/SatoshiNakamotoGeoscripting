@@ -8,5 +8,7 @@ preprocessData('https://raw.githubusercontent.com/GeoScripting-WUR/VectorRaster/
         'MODIS.zip')
 
 greenValues <- computeGreenness("MOD", "NLD", 2)
+
+#For several months at once - add all months in a year to check the yearly average
 greenestUnit <- getGreenestInTimespan(greenValues, c("May","June","July"))
 displayAdministrativeUnit(greenestUnit, 2)
