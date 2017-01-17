@@ -15,5 +15,6 @@ displayAdministrativeUnit <-function(greenestUnit, level){
                    y = centroid@coords[,2]),
                label = greenestUnit@data[,name],
                col = "black")+
+    #For lack of time, the exact administrative unit was not derived from the data
     ggtitle("Greenest administrative unit of the Netherlands")
 }

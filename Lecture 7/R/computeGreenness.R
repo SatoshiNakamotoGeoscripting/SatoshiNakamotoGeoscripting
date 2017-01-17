@@ -14,8 +14,6 @@ computeGreenness <- function(filePrefix, administrativeRegion, level) {
   modisMasked <- mask(modisLoaded, mask = adminReprojected)
   greenValues <- extract(modisMasked, adminReprojected, fun="mean", df = FALSE, sp = TRUE, na.rm=TRUE)
   
-  plot(modisLoaded[["January"]])
-  plot(adminReprojected, add = TRUE)
   return(greenValues)
 }
 
