@@ -1,12 +1,9 @@
 #Unziping, preprocessing
 
-preprocessing <- function(){
-dir.create('./data')
-download.file(url = 'http://www.mapcruzin.com/download-shapefile/netherlands-places-shape.zip', 
-              destfile = 'data/netherlands-places-shape.zip', method = 'auto')
-download.file(url = 'http://www.mapcruzin.com/download-shapefile/netherlands-railways-shape.zip', 
-              destfile = 'data/netherlands-railways-shape.zip', method = 'auto')
-### doesnt work at the moment!
-unzip("data/netherlands-places-shape.zip",exdir="data/places")
-unzip("data/netherlands-railways-shape.zip",exdir ="data/railways")
+preprocessing <- function(url,destdir,file){
+  ifelse (!dir.exists(destdir), dir.create(destdir), FALSE)
+  destfile=paste0(destdir, '/', file)
+  download.file(url=url, destfile=destfile, method='auto')
+  #dir.create()
+  unzip(destfile, exdir=destdir)
 }
