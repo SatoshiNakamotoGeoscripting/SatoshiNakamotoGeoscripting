@@ -10,4 +10,3 @@ preprocessData('https://raw.githubusercontent.com/GeoScripting-WUR/VectorRaster/
 greenValues <- computeGreenness("MOD", "NLD", 2)
 greenestUnit <- getGreenestInTimespan(greenValues, c("May","June","July"))
 displayAdministrativeUnit(greenestUnit, 2)
-
