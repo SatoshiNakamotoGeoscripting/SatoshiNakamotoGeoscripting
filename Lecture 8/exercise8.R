@@ -66,7 +66,6 @@ zonalStatistics<-zonal(predictedRasterBrick, classes, fun='mean')
 zonalStatisticsDF <- as.data.frame(zonalStatistics)
 predictedRasterBrickDF <- as.data.frame(predictedRasterBrick)
 sqrt((zonalStatisticsDF$predictedVCF-zonalStatisticsDF$VCF)^2)#, na.rm = TRUE)
-#1 is cropland, 2 is forest and 3 is wetland
-
+#1 is cropland, 2 is forest and 3 is wetlan
   
   
