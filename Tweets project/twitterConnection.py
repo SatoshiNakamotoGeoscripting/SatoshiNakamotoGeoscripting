@@ -11,7 +11,7 @@ import datetime
 
 
 ##codes to access twitter API. 
-APP_KEY = 
+APP_KEY =
 APP_SECRET =  
 OAUTH_TOKEN =   
 OAUTH_TOKEN_SECRET = 
