@@ -81,7 +81,7 @@ def main():
         print 'OOPS! that hurts, something went wrong while getting the stream from Twitter: '+str(ValueError)
 
 def write_tweet(t):
-    target = open(output_file, 'a')
+    target = open(output_file, 'a' )
     target.write(t)
     target.write('\n')
     target.close()
