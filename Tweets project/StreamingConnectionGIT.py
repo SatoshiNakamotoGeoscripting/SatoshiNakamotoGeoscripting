@@ -15,10 +15,10 @@ import string, os, sys, subprocess, time
 import psycopg2
 
 ##codes to access twitter API. 
-APP_KEY = "74PliM2tvfJqWC6U6K3gcOprg"
-APP_SECRET =  "h7G1mxjyI3pWP4GbgwKiYtT20tAr6OTYaRp1FffvoKHbHdC95i"
-OAUTH_TOKEN =   "822084094506962944-NtMtVjUh7pcWKVWN1t4jL27V2GlLcH6"
-OAUTH_TOKEN_SECRET = "WnF2wGpFc8YJxX51HIVrKTVjLFwm0RKrIBG9UlOGrme4a"
+APP_KEY = 
+APP_SECRET =  
+OAUTH_TOKEN = 
+OAUTH_TOKEN_SECRET = 
 
 ## just some date and time hack to generate an unique filename if needed
 output_file = 'result_'+datetime.now().strftime('%Y%m%d-%H%M%S')+'.csv' 
@@ -81,7 +81,7 @@ def main():
         print 'OOPS! that hurts, something went wrong while getting the stream from Twitter: '+str(ValueError)
 
 def write_tweet(t):
-    target = open(output_file, 'a' )
+    target = open(output_file, 'a')
     target.write(t)
     target.write('\n')
     target.close()
