@@ -20,7 +20,7 @@ if not exists('./data'):
     makedirs('./data')
 
 # Move over to data directory
-os.chdir('./data')
+chdir('./data')
 
 ## Is the ESRI Shapefile driver available?
 driverName = "ESRI Shapefile"
@@ -54,18 +54,18 @@ def shpFromPoints(filename, layername, points, save_kml = True):
         kml.save("my_points.kml")
 
 #Creates a folium HTML with lat/long as iframe popups
-def mapFromPoints(pts, outname, zoom_level, save = True):
+def mapFromPoints(pts, outname, zoom_level, save = True, tiles = 'Stamen Terrain'):
     #Get the center of the map by deriving the mean of all lats/longs
-    mean_long = mean([pt[0] for pt in pts])
-    mean_lat = mean([pt[1] for pt in pts])
-    point_map = folium.Map(location=[mean_long, mean_lat], zoom_start = zoom_level)
+    mean_long = mean([pt[1] for pt in pts])
+    mean_lat = mean([pt[0] for pt in pts])
+    point_map = folium.Map(location=[mean_long, mean_lat], zoom_start = zoom_level, tiles = tiles)
     for pt in pts:
-        folium.Marker([pt[0], pt[1]],\
+        folium.Marker([pt[1], pt[0]],\
         popup = folium.Popup(folium.element.IFrame(
         html='''
                 <b>Latitude:</b>  {lat}<br>
                 <b>Longitude:</b> {lon}<br>
-             '''.format(lat = pt[0], lon = pt[1]),\
+             '''.format(lat = pt[1], lon = pt[0]),\
         width=150, height=100),\
         max_width=150)).add_to(point_map)
     if save == True:
@@ -74,9 +74,9 @@ def mapFromPoints(pts, outname, zoom_level, save = True):
 
 filename = "wageningenpoints.shp"
 layername = "wagpoints"
-pts = [ (51.987398, 5.665777),
-        (51.978434, 5.663133),
-        (51.988434, 5.663148) ]
+pts = [ (5.665777, 51.987398),
+        (5.663133, 51.978434),
+        (5.663148, 51.988434) ]
                
 shpFromPoints(filename, layername, pts)
-mapFromPoints(pts, "satoshinakamoto", zoom_level = 13)
+mapFromPoints(pts, "satoshinakamoto", zoom_level = 13, tiles = 'openstreetmap')#, marker_icon = 'cloud')
