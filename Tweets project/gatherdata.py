@@ -13,6 +13,7 @@ from datetime import date
 from time import *
 import string, os, sys, subprocess, time
 import psycopg2
+import time
 
 ##codes to access twitter API. 
 APP_KEY = "Q530eYJ2divtkAltNRF9ORY6G"
@@ -97,28 +98,26 @@ class MyStreamer(TwythonStreamer):
 
         #print string_to_write
         tweet_text.replace("'", '')
-        try:
-            insert_query = r"""
-                INSERT INTO public.trumptweets VALUES(
-                {id}, '{time}', '{latitude}', '{longitude}', '{city}', '{lang}', '{source}',
-                '{countrycode}','{countryname}', '{location}', '{retweet}', '{text}')
-                """.format( id = str(tweet_id),
-                            time = str(tweet_datetime),
-                            latitude = str(tweet_lat),
-                            longitude = str(tweet_lon),
-                            city = str(tweet_city),
-                            lang = str(tweet_lang),
-                            source = str(tweet_source),
-                            countrycode = str(tweet_countrycode),
-                            countryname = str(tweet_countryname),
-                            location = str(tweet_location),
-                            retweet = str(retweet),
-                            text = str(tweet_text))     
-            cur.execute(insert_query)
-            con.commit()
-        except:
-            pass
-
+        #time.sleep(0.1)
+        insert_query = r"""
+            INSERT INTO public.trumptweets VALUES(
+            {id}, '{time}', '{latitude}', '{longitude}', '{city}', '{lang}', '{source}',
+            '{countrycode}','{countryname}', '{location}', '{retweet}', '{text}')
+            """.format( id = str(tweet_id),
+                        time = str(tweet_datetime),
+                        latitude = str(tweet_lat),
+                        longitude = str(tweet_lon),
+                        city = str(tweet_city),
+                        lang = str(tweet_lang),
+                        source = str(tweet_source),
+                        countrycode = str(tweet_countrycode),
+                        countryname = str(tweet_countryname),
+                        location = str(tweet_location),
+                        retweet = str(retweet),
+                        text = str(tweet_text))     
+        cur.execute(insert_query)
+        con.commit()
+        print "success"
 #        i = 0
 #        if i == 10:
 #            cur.close()
@@ -136,7 +135,8 @@ def main():
         #stream.statuses.filter(locations='-120.00,40.00,-70.35,63.65', )        
     except:
         runfile('/home/user/Desktop/gatherdata.py', wdir='/home/user/Desktop')  
-        pass
+        #print "shit"
+        #main()
 
 
 #def write_tweet(t):
