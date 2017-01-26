@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
-
+import geocoder
 from twython import TwythonStreamer
 import string, json, pprint
 import urllib
@@ -13,25 +13,21 @@ from datetime import date
 from time import *
 import string, os, sys, subprocess, time
 import psycopg2
-import time
 
-##codes to access twitter API. 
+# codes to access twitter API. 
 APP_KEY = "Q530eYJ2divtkAltNRF9ORY6G"
 APP_SECRET =  "xgRzCBf53goOm1ir06spIT8oAmvQFu5kr53ptycDn4CCEw0MYc"
 OAUTH_TOKEN =  "2567730218-I3fdSSmhVi8vDq0zn94OGTnfkpTpPqKpOHaqvD5"
 OAUTH_TOKEN_SECRET = "maoKC8LRS2rxpRmSz9mUbOCTc8TE2VxAaBJQTue2stqQS"
 
-##initiating Twython object 
-#output_file = '/home/user/tweets/result_'+datetime.now().strftime('%Y%m%d-%H%M%S')+'.csv' 
-
+# Attempt to establish a connection to the database
 try:
     con = psycopg2.connect("dbname=tweets user=user password=user" )
     cur = con.cursor()
-    print "the pentagon is hacked"
 except:
-    print "oops error"             
-       
-#Class to process JSON data comming from the twitter stream API. Extract relevant fields
+    print "Database connection error"           
+   
+# Class to process JSON data comming from the twitter stream API. Extract relevant fields
 class MyStreamer(TwythonStreamer):
     def on_success(self, data):
         tweet_id = 9999999999
@@ -91,52 +87,50 @@ class MyStreamer(TwythonStreamer):
             if 'country' in place and place['country'] != None:
                 tweet_countryname = place['country'].encode('utf-8')         
 
-        #print string_to_write
-        tweet_text.replace("'", '')
-        #time.sleep(0.1)
-        insert_query = r"""
-            INSERT INTO public.nsonline VALUES(
-            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-        data = (str(tweet_id),
-                str(tweet_datetime),
-                str(tweet_lat),
-                str(tweet_lon),
-                str(tweet_city),
-                str(tweet_lang),
-                str(tweet_source),
-                str(tweet_countrycode),
-                str(tweet_countryname),
-                str(tweet_location),
-                str(retweet),
-                str(tweet_text))
-        cur.execute(insert_query, data)
-        con.commit()
-        print "success"
-#        i = 0
-#        if i == 10:
-#            cur.close()
-#            con.close()
-
+        if tweet_location != "NaN" or tweet_countrycode != "NaN" or tweet_countryname != "NaN":
+           
+            # Compute coordinates from location and countryname
+            g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
+            outlatlon = g.latlng
+            
+            # Feed data to database defined in beginning of script
+            insert_query = r"""
+                            INSERT INTO public.drugtable VALUES(
+                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            """
+            data = (str(tweet_id),
+                    str(tweet_datetime),
+                    str(tweet_lat),
+                    str(tweet_lon),
+                    str(tweet_city),
+                    str(tweet_lang),
+                    str(tweet_source),
+                    str(tweet_countrycode),
+                    str(tweet_countryname),
+                    str(tweet_location),
+                    str(retweet),
+                    str(tweet_text),
+                    outlatlon[0],
+                    outlatlon[1])
+            cur.execute(insert_query, data)
+            con.commit()
+            print tweet_text
+            
 def main():
     try:
         stream = MyStreamer(APP_KEY, APP_SECRET,OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
         print 'Connecting to twitter: will take a minute'
     except ValueError:
-        print 'OOPS! that hurts, something went wrong while making connection with Twitter: '+str(ValueError)
-    
-    
+        con.close()
+        cur.close()
+        print 'Something went wrong while making connection with Twitter: '+str(ValueError)
+    # Define what to track
     try:        
-        stream.statuses.filter(track = ['#ns'])       
-    except:        
-        stream.statuses.filter(track = ['#ns'])
-       
-
-#def write_tweet(t):
-#    target = open(output_file, 'a')
-#    target.write(t)
-#    target.write('\n')
-#    target.close()
+        stream.statuses.filter(track = ['alcohol,drugs,narcotics,cannabis,marijuana,ganja,xtc,mdma,cocaine,heroin,opium,amphetamines,methamfetamines,lsd'])
+    except:
+        cur.close
+        con.close        
+        print "Stream terminated"       
                 
 if __name__ == '__main__':
     main()
