@@ -34,88 +34,83 @@ except:
 #Class to process JSON data comming from the twitter stream API. Extract relevant fields
 class MyStreamer(TwythonStreamer):
     def on_success(self, data):
-        tweet_lat = 0.0
-        tweet_lon = 0.0
-        tweet_name = ""
-        retweet_count = 0
-
+        tweet_id = 9999999999
+        tweet_text = "NaN"
+        geo = None
+        tweet_lon = 9999
+        tweet_lat = 9999
+        tweet_datetime = 9999
+        tweet_name = "NaN"
+        tweet_city = "NaN"
+        tweet_lang = "NaN"
+        retweet = 0
+        tweet_source = "NaN"
+        tweet_location = "NaN"
+        tweet_countrycode = "NaN"
+        tweet_countryname = "NaN"
+        
         if 'id' in data:
             tweet_id = data['id']
-        else:
-            tweet_id = 9999999999
             
         if 'text' in data:
             tweet_text = data['text'].encode('utf-8').replace("'", '')
-        else:
-            tweet_text = "NaN"
             
         if 'coordinates' in data:    
             geo = data['coordinates']
-        else:
-            geo = None
             
         if not geo is None:
             latlon = geo['coordinates']
             tweet_lon = latlon[0]
             tweet_lat= latlon[1]
-        else:
-            tweet_lon = 9999
-            tweet_lat = 9999
             
         if 'created_at' in data:
             dt = data['created_at']
             tweet_datetime = datetime.strptime(dt, '%a %b %d %H:%M:%S +0000 %Y')
-
+            
         if 'user' in data:
             users = data['user']
-            tweet_name = users['screen_name']
-            tweet_city = users['location']
-            tweet_lang = users['lang']
+            if 'screen_name' in users and users['screen_name'] != None:
+                tweet_name = users['screen_name'].encode('utf-8')
+            if 'location' in users and users['location'] != None:
+                tweet_city = users['location'].encode('utf-8')
+            if 'lang' in users and users['lang'] != None:                
+                tweet_lang = users['lang'].encode('utf-8')
         
         if 'retweet_count' in data:
             retweet = data['retweet_count']
-        
-        if 'source' in data:
-            tweet_source = data['source']
-        
-        if 'place' in data:
-            place = data['place']
-            try:
-                tweet_location = place['name']
-            except:
-                tweet_location = 9999
-            try:
-                tweet_countrycode = place['country_code']
-            except:
-                tweet_countrycode = 9999
-            try:
-                tweet_countryname = place['country']
-            except:
-                tweet_countryname = 9999 
             
         if 'source' in data:
-            tweet_source = data['source'] if not data['source'] is None else "9999"
+            tweet_source = data['source'].encode('utf-8')
+            
+        if 'place' in data and data['place'] != None:
+            place = data['place']
+            if 'name' in place and place['name'] != None:
+                tweet_location = place['name'].encode('utf-8')
+            if 'country_code' in place and place['country_code'] != None:
+                tweet_countrycode = place['country_code'].encode('utf-8')
+            if 'country' in place and place['country'] != None:
+                tweet_countryname = place['country'].encode('utf-8')         
 
         #print string_to_write
         tweet_text.replace("'", '')
         #time.sleep(0.1)
         insert_query = r"""
-            INSERT INTO public.trumptweets VALUES(
-            {id}, '{time}', '{latitude}', '{longitude}', '{city}', '{lang}', '{source}',
-            '{countrycode}','{countryname}', '{location}', '{retweet}', '{text}')
-            """.format( id = str(tweet_id),
-                        time = str(tweet_datetime),
-                        latitude = str(tweet_lat),
-                        longitude = str(tweet_lon),
-                        city = str(tweet_city),
-                        lang = str(tweet_lang),
-                        source = str(tweet_source),
-                        countrycode = str(tweet_countrycode),
-                        countryname = str(tweet_countryname),
-                        location = str(tweet_location),
-                        retweet = str(retweet),
-                        text = str(tweet_text))     
-        cur.execute(insert_query)
+            INSERT INTO public.nsonline VALUES(
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+        data = (str(tweet_id),
+                str(tweet_datetime),
+                str(tweet_lat),
+                str(tweet_lon),
+                str(tweet_city),
+                str(tweet_lang),
+                str(tweet_source),
+                str(tweet_countrycode),
+                str(tweet_countryname),
+                str(tweet_location),
+                str(retweet),
+                str(tweet_text))
+        cur.execute(insert_query, data)
         con.commit()
         print "success"
 #        i = 0
@@ -129,15 +124,13 @@ def main():
         print 'Connecting to twitter: will take a minute'
     except ValueError:
         print 'OOPS! that hurts, something went wrong while making connection with Twitter: '+str(ValueError)
-
+    
+    
     try:        
-        stream.statuses.filter(track = ['trump'])
-        #stream.statuses.filter(locations='-120.00,40.00,-70.35,63.65', )        
-    except:
-        runfile('/home/user/Desktop/gatherdata.py', wdir='/home/user/Desktop')  
-        #print "shit"
-        #main()
-
+        stream.statuses.filter(track = ['#ns'])       
+    except:        
+        stream.statuses.filter(track = ['#ns'])
+       
 
 #def write_tweet(t):
 #    target = open(output_file, 'a')
