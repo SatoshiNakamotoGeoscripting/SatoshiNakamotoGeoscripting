@@ -13,6 +13,7 @@ Created on Wed Jan 25 11:40:24 2017
 
 import re
 import nltk
+import cPickle as pickle
 
 ## Both positive and negative tweets should be much bigger!!!
 #posTweets = [('I love this car', 'positive'),('This view is amazing', 'positive'),
@@ -111,7 +112,21 @@ training_set = nltk.classify.apply_features(extract_features, tweets)
 ## Now that we have our training set, we can train our classifier.
 classifier = nltk.NaiveBayesClassifier.train(training_set)
 
-print label_probdist.prob('positive')
+### SAVE THE CLASSIFIER
+f = open('my_classifier.pickle', 'wb')
+pickle.dump(classifier, f)
+f.close()
+
+### LOAD THE CLASSIFIER!!!
+f = open('my_classifier.pickle', 'rb')
+classifier = pickle.load(f)
+f.close()
+
+label_probdist = nltk.ELEProbDist(nltk.FreqDist(all_words))
+
+print feature_probdist
+
+print nltk.ELEProbDistlabel_probdist.prob('positive')
 
 print classifier.show_most_informative_features(32)
 
