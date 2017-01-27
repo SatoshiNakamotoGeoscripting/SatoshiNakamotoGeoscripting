@@ -4,6 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
+import re
 import geocoder
 from twython import TwythonStreamer
 import string, json, pprint
@@ -44,12 +45,17 @@ class MyStreamer(TwythonStreamer):
         tweet_location = "NaN"
         tweet_countrycode = "NaN"
         tweet_countryname = "NaN"
+        hyperlink = "NaN"
+        outlatlon = [9999,9999]
         
         if 'id' in data:
             tweet_id = data['id']
             
         if 'text' in data:
             tweet_text = data['text'].encode('utf-8').replace("'", '')
+            if "https://t.co" in tweet_text:
+                all_hyperlinks = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', tweet_text)
+                hyperlink = all_hyperlinks[-1] # grab the last encountered URL, which to knowledge is the RT origin (needs testing!)
             
         if 'coordinates' in data:    
             geo = data['coordinates']
@@ -71,9 +77,6 @@ class MyStreamer(TwythonStreamer):
                 tweet_city = users['location'].encode('utf-8')
             if 'lang' in users and users['lang'] != None:                
                 tweet_lang = users['lang'].encode('utf-8')
-        
-        if 'retweet_count' in data:
-            retweet = data['retweet_count']
             
         if 'source' in data:
             tweet_source = data['source'].encode('utf-8')
@@ -87,36 +90,38 @@ class MyStreamer(TwythonStreamer):
             if 'country' in place and place['country'] != None:
                 tweet_countryname = place['country'].encode('utf-8')         
 
-        if tweet_location != "NaN" or tweet_countrycode != "NaN" or tweet_countryname != "NaN":
+        if tweet_location != "NaN" or tweet_lon != 9999:
            
             # Compute coordinates from location and countryname
-            g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
-            outlatlon = g.latlng
+            if tweet_location != "NaN":
+                g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
+                outlatlon = g.latlng
             
             # Feed data to database defined in beginning of script
             insert_query = r"""
-                            INSERT INTO public.drugtable VALUES(
+                            INSERT INTO public.trumptweets VALUES(
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """
-            data = (str(tweet_id),
+            data = (tweet_id,
                     str(tweet_datetime),
-                    str(tweet_lat),
-                    str(tweet_lon),
+                    tweet_lat,
+                    tweet_lon,
                     str(tweet_city),
                     str(tweet_lang),
                     str(tweet_source),
                     str(tweet_countrycode),
                     str(tweet_countryname),
                     str(tweet_location),
-                    str(retweet),
+                    str(hyperlink),
                     str(tweet_text),
                     outlatlon[0],
                     outlatlon[1])
             cur.execute(insert_query, data)
             con.commit()
+            print hyperlink
             print tweet_text
-            
 def main():
+    # Create a connection to the API
     try:
         stream = MyStreamer(APP_KEY, APP_SECRET,OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
         print 'Connecting to twitter: will take a minute'
@@ -124,13 +129,18 @@ def main():
         con.close()
         cur.close()
         print 'Something went wrong while making connection with Twitter: '+str(ValueError)
+    
     # Define what to track
-    try:        
-        stream.statuses.filter(track = ['alcohol,drugs,narcotics,cannabis,marijuana,ganja,xtc,mdma,cocaine,heroin,opium,amphetamines,methamfetamines,lsd'])
+    try:
+        stream.statuses.filter(track = ['trump'])   
+        #stream.statuses.filter(track = ['trump'])      
+        #stream.statuses.filter(track = ['alcohol,drugs,narcotics,cannabis,marijuana,ganja,xtc,mdma,cocaine,heroin,opium,amphetamines,methamfetamines,lsd'])
     except:
+        # Shortcut to restarting the script - if the connection cancels then it gracefully terminates the db lock and establishes a new connection
         cur.close
         con.close        
-        print "Stream terminated"       
-                
+        print "########### Stream terminated ###########"
+        main()
+        
 if __name__ == '__main__':
     main()

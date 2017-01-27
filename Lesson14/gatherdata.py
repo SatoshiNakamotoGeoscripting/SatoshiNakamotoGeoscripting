@@ -4,6 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
+import re
 import geocoder
 from twython import TwythonStreamer
 import string, json, pprint
@@ -44,12 +45,15 @@ class MyStreamer(TwythonStreamer):
         tweet_location = "NaN"
         tweet_countrycode = "NaN"
         tweet_countryname = "NaN"
+        hyperlink = "NaN"
         
         if 'id' in data:
             tweet_id = data['id']
             
         if 'text' in data:
             tweet_text = data['text'].encode('utf-8').replace("'", '')
+            if "https://t.co" in tweet_text:
+                print True
             
         if 'coordinates' in data:    
             geo = data['coordinates']
@@ -71,9 +75,6 @@ class MyStreamer(TwythonStreamer):
                 tweet_city = users['location'].encode('utf-8')
             if 'lang' in users and users['lang'] != None:                
                 tweet_lang = users['lang'].encode('utf-8')
-        
-        if 'retweet_count' in data:
-            retweet = data['retweet_count']
             
         if 'source' in data:
             tweet_source = data['source'].encode('utf-8')
@@ -108,13 +109,13 @@ class MyStreamer(TwythonStreamer):
                     str(tweet_countrycode),
                     str(tweet_countryname),
                     str(tweet_location),
-                    str(retweet),
+                    str(hyperlink),
                     str(tweet_text),
                     outlatlon[0],
                     outlatlon[1])
             cur.execute(insert_query, data)
             con.commit()
-            print tweet_text
+            # print tweet_text
             
 def main():
     try:

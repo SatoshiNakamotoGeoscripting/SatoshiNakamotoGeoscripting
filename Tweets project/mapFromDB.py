@@ -45,7 +45,8 @@ def mapFromTweets(list_of_tweets, output_file_name, zoom_level, save = True, til
     
     # TODO: Get top-right & bot-left, then create three classes for zoom level
     
-    point_map = folium.Map(location=[mean_long, mean_lat], zoom_start = zoom_level, tiles = tiles)
+    tweet_map = folium.Map(location=[mean_long, mean_lat], zoom_start = zoom_level, tiles = tiles)
+    tweet_cluster = folium.MarkerCluster("tweets").add_to(tweet_map)
     
     for tweet in tweets:
         tweet_text = tweet[0]
@@ -53,38 +54,13 @@ def mapFromTweets(list_of_tweets, output_file_name, zoom_level, save = True, til
         coords = tweet[2]
         # html rendering source: http://stackoverflow.com/questions/29535715/python-with-folium-how-can-i-embed-a-webpage-in-the-popup
         html =  r"""{text} <br>""".format(text = tweet_text)
-        print url
-        if tweet[1] != "NaN":
-            html = html + r"""
-                 <!doctype html>
-                    <html>
-                    <iframe id="myIFrame" width="200" height="200" src={}""".format("") + """frameborder="0"></iframe>
-                    <script type="text/javascript">
-                    var resizeIFrame = function(event) {
-                        var loc = document.location;
-                        if (event.origin != loc.protocol + '//' + loc.host) return;
-                
-                        var myIFrame = document.getElementById('myIFrame');
-                        if (myIFrame) {
-                            myIFrame.style.height = event.data.h + "px";
-                            myIFrame.style.width  = event.data.w + "px";
-                        }
-                    };
-                    if (window.addEventListener) {
-                        window.addEventListener("message", resizeIFrame, false);
-                    } else if (window.attachEvent) {
-                        window.attachEvent("onmessage", resizeIFrame);
-                    }
-                    </script>
-                    </html>
-                 """
         folium.Marker([coords[0], coords[1]],
         popup = folium.Popup(folium.element.IFrame(
             html=html,
             width=250, height=250),
-            max_width=250)).add_to(point_map)
+            max_width=250)).add_to(tweet_cluster)
     if save == True:
-        point_map.save("{}.html".format(output_file_name))
-    return point_map
-tweets = getTweetsFromDB("tweets","user","user","trumptweets")[:10]
+        tweet_map.save("{}.html".format(output_file_name))
+    return tweet_map
+tweets = getTweetsFromDB("tweets","user","user","trumptweets")
 mapFromTweets(tweets, 'trumptweets', 3, save = True, tiles = 'Stamen Terrain')
