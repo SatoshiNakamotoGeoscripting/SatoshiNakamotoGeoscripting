@@ -60,8 +60,8 @@ def mapFromTweets(list_of_tweets, output_file_name, zoom_level, save = True, til
         url = tweet[1]
         coords = tweet[2]
         # html rendering source: http://stackoverflow.com/questions/29535715/python-with-folium-how-can-i-embed-a-webpage-in-the-popup
-        html =  r"""{text} <br>
-                    Accurate location? {accuracy}""".format(text = tweet_text, accuracy = coords[2])
+        html =  r"""<b>Tweet:</b> {text}<br><br>
+                    <b>Accurate location?</b> {accuracy}""".format(text = tweet_text, accuracy = coords[2])
         folium.Marker([coords[0], coords[1]],
         popup = folium.Popup(folium.element.IFrame(
             html=html,
