@@ -5,6 +5,10 @@ Created on Fri Jan 27 16:23:07 2017
 
 @author: user
 """
+#https://pypi.python.org/pypi/requests/
+#http://text-processing.com/docs/sentiment.html
+import requests
+## FOUND HERE http://www.nltk.org/howto/sentiment.html
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import sys
 reload(sys) #Prevents errors with utf-8 encoding not working properly

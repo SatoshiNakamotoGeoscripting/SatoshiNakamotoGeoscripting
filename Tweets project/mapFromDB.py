@@ -42,7 +42,8 @@ def mapFromTweets(list_of_tweets, output_file_name, zoom_level, save = True, til
     #TODO: implement sources
     #https://blog.dominodatalab.com/creating-interactive-crime-maps-with-folium/
     #http://deparkes.co.uk/2016/06/24/folium-marker-clusters/
-    #https://github.com/python-visualization/folium    
+    #https://github.com/python-visualization/folium   
+    #https://github.com/johan/world.geo.json
     """Fit bounds"""
     
     # Get the center of the map by deriving the mean of all lats/longs
