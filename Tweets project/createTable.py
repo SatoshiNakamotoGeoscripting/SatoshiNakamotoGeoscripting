@@ -37,4 +37,4 @@ def createTable(db_name, user, password, table_name, overwrite = False):
     con.commit()
     cur.close()
     con.close()
-createTable(db_name="tweets", user="user", password="user", table_name = "trumptweets", overwrite = True)
+createTable(db_name="tweets", user="user", password="user", table_name = "trumptweets3", overwrite = True)

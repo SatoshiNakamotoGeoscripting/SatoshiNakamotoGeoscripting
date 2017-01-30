@@ -99,7 +99,7 @@ class MyStreamer(TwythonStreamer):
             
             # Feed data to database defined in beginning of script
             insert_query = r"""
-                            INSERT INTO public.trumptweets2 VALUES(
+                            INSERT INTO public.trumptweets3 VALUES(
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """
             data = (tweet_id,
