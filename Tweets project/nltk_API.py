@@ -1,20 +1,16 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jan 27 16:23:07 2017
+Created on Sun Jan 29 12:12:43 2017
 
 @author: user
 """
-## FOUND HERE http://www.nltk.org/howto/sentiment.html
-## Source code http://www.nltk.org/_modules/nltk/sentiment/vader.html
-## http://www.nltk.org/api/nltk.sentiment.html
-## Hutto, C.J. & Gilbert, E.E. (2014). VADER: A Parsimonious Rule-based Model 
-##for Sentiment Analysis of Social Media Text. Eighth International Conference on
-## Weblogs and Social Media (ICWSM-14). Ann Arbor, MI, June 2014.
-## http://www.postgresqltutorial.com/postgresql-python
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import psycopg2
-import sys
+import json
+from numpy import mean
+import folium
+import requests
+import sys  
 reload(sys) #Prevents errors with utf-8 encoding not working properly
 sys.setdefaultencoding('utf8')
 
@@ -37,30 +33,34 @@ def getTweetsFromDB(dbname, user, password, table_name):
 
 tweets = getTweetsFromDB("tweets","user","user","trumptweets2")
 
-def SentimentAnalyzer(tweets):
-    sid = SentimentIntensityAnalyzer() #need to nltk.download() to use all the packages
 
-    sentiment_tweets = []
+
+def sentimentAnalyzer(tweets):
+    #https://pypi.python.org/pypi/requests/
+    #http://text-processing.com/docs/sentiment.html
+    tweets_emotion = []
+    i = 0
     #for i in range(10):
-    for tweet in tweets:   
+    for tweet in tweets:
+        r = requests.post('http://text-processing.com/api/sentiment/', data = {'text': tweet[1]})
+        ##https://market.mashape.com/japerk/text-processing/Pricing
+        ## This API is limited to 45.000 requests per month (for free)
         tweet_id = tweet[0]
         tweet_id = str(tweet_id)
         tweet_id = int(tweet_id)
-        ss = sid.polarity_scores(tweet[1])
-        if ss['compound'] <= -0.293:
-            label = 'negative'
-        elif ss['compound'] >= 0.293:
-            label = 'positive'
-        else:
-            label = 'neutral'
-        sentiment = ss['compound']
-        
-        sentiment_tweets.append((tweet_id,sentiment,label))
-    return sentiment_tweets
-                  
-sentiment_tweets = SentimentAnalyzer(tweets)
+        emotion_prob = r.json()['probability']
+        emotion_label = r.json()['label']
+        emotion_prob = emotion_prob[emotion_label] #for only keeping the value corresponding to the label itself.
+        tweets_emotion.append([tweet_id,emotion_prob,emotion_label])
+        #print r.json()
+        print(r.status_code, r.reason , i)
+        i +=1
+        #It takes 14 minutes for 2300 Tweets (165 per min or 3 per second)
+    return tweets_emotion
+tweets_emotion = sentimentAnalyzer(tweets)
 
-## Should we connect with the file already named createTable?
+
+## Should we 
 def createTable(db_name, user, password, table_name, overwrite = False):
     try:
         con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
@@ -73,14 +73,16 @@ def createTable(db_name, user, password, table_name, overwrite = False):
         cur.execute(del_table_query)
     insert_query =  """CREATE TABLE IF NOT EXISTS {table_name} (
                         id  	bigint,
-                        label varchar(15),
-                        sentiment numeric);
+                        labelapi varchar(15),
+                        sentimentapi numeric);
                     """.format(table_name = table_name)
     cur.execute(insert_query)
     con.commit()
     cur.close()
     con.close()
-createTable(db_name="tweets", user="user", password="user", table_name = "sentiment_tweets", overwrite = True)
+
+createTable(db_name="tweets", user="user", password="user", table_name = "sentiment_tweetsAPI", overwrite = True)
+    
 
 def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
     try:
@@ -89,11 +91,11 @@ def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
     except:
         print "oops error"
     for tweet in sentiment_tweets:
-        insert_query = r"""INSERT INTO public.sentiment_tweets VALUES (%s,%s,%s)"""
+        insert_query = r"""INSERT INTO public.sentiment_tweetsapi VALUES (%s,%s,%s)"""
         data = (tweet[0],tweet[2],tweet[1])
         cur.execute(insert_query, data)
     con.commit()
-insertSentiments("tweets","user","user","sentiment_tweets",sentiment_tweets)
+insertSentiments("tweets","user","user","sentiment_tweetsAPI",tweets_emotion)
 
 def updateColumn(db_name, user, password,target_table,source_table, column_name, columntype):
     try:
@@ -124,6 +126,6 @@ def updateColumn(db_name, user, password,target_table,source_table, column_name,
     con.commit()
     
     
-updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets","label","varchar(15)")
-updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets","sentiment","numeric")
-    
+updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweetsAPI","labelAPI","varchar(15)")
+updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweetsAPI","sentimentAPI","numeric")
+
