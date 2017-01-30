@@ -32,6 +32,7 @@ def getTweetsFromDB(dbname, user, password, table_name):
         tweet_id = record[0]
         
         list_of_tweets.append([tweet_id,tweet_text])
+    print "sentiment tweets done!"
     return list_of_tweets
 
 tweets = getTweetsFromDB("tweets","user","user","trumptweets2")
@@ -55,6 +56,7 @@ def SentimentAnalyzer(tweets):
         sentiment = ss['compound']
         
         sentiment_tweets.append((tweet_id,sentiment,label))
+    print "SENTIMENTS ANALYZED"
     return sentiment_tweets
                   
 sentiment_tweets = SentimentAnalyzer(tweets)
@@ -78,6 +80,7 @@ def createTable(db_name, user, password, table_name, overwrite = False):
     con.commit()
     cur.close()
     con.close()
+    print "table created"
 createTable(db_name="tweets", user="user", password="user", table_name = "sentiment_tweets", overwrite = True)
 
 def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
@@ -91,63 +94,37 @@ def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
         data = (tweet[0],tweet[2],tweet[1])
         cur.execute(insert_query, data)
     con.commit()
-
+    print "values inserted in sentiment_tweets"
 insertSentiments("tweets","user","user","sentiment_tweets",sentiment_tweets)
 
-#def joinTables(db_name, user, password):
-#    try:
-#        con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
-#        cur = con.cursor()
-#    except:
-#        print "oops error"
-#        
-#    drop_columns = """
-#    ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS sentiment;
-#    ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS label;
-#    """
-#    cur.execute(drop_columns)
-#        
-#    add_columns = """
-#        ALTER TABLE trumptweets2 ADD COLUMN sentiment  decimal;
-#        ALTER TABLE trumptweets2 ADD COLUMN label varchar(15);
-#    """
-#    cur.execute(add_columns)
-#    
-#    join = """
-#        UPDATE public.trumptweets2 t1
-#        JOIN sentiment_tweets t2 ON t1.id = t2.id 
-#        SET t1.sentiment = t2.sentiment and t1.label = t2.label
-#    """
-#    cur.execute(join)
-#    
-#    con.commit()
-#
-#joinTables("tweets", "user", "user")
-    
-def insertintotables(db_name, user, password):
+def updateColumn(db_name, user, password,target_table,source_table, column_name, columntype):
     try:
         con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
         cur = con.cursor()
     except:
         print "oops error"
-    drop_columns = """
-    ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS sentiment;
-    ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS label;
-    """
-    cur.execute(drop_columns)
         
-    add_columns = """
-        ALTER TABLE trumptweets2 ADD COLUMN sentiment  decimal;
-        ALTER TABLE trumptweets2 ADD COLUMN label varchar(15);
-    """
-    cur.execute(add_columns)
+    drop_column = """
+        ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS {column_name};
+    """.format(column_name = column_name)
+    cur.execute(drop_column)
+        
+    add_column = """
+        ALTER TABLE trumptweets2 ADD COLUMN {column_name}  {columntype};
+    """.format(column_name=column_name, columntype =columntype)
+    cur.execute(add_column)
     
-        
-    insertinto = """INSERT INTO trumptweets2 (sentiment,label) 
-                    SELECT sentiment_tweets.sentiment, sentiment_tweets.label 
-                    FROM trumptweets2, sentiment_tweets 
-                    WHERE sentiment_tweets.id = trumptweets2.id 
-    """
-    cur.execute(insertinto)
+    update = """
+        UPDATE {target_table} t2
+        SET    {column_name} = t1.{column_name}
+        FROM   {source_table} t1
+        WHERE  t2.id = t1.id              
+    """.format(target_table=target_table,column_name=column_name,source_table=source_table)
+    cur.execute(update)
+    
     con.commit()
-insertintotables("tweets","user","user")
+    
+    
+updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets","label","varchar(15)")
+updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets","sentiment","numeric")
+    
