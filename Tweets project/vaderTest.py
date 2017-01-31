@@ -95,35 +95,34 @@ def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
     con.commit()
 insertSentiments("tweets","user","user","sentiment_tweets",sentiment_tweets)
 
-def updateColumn(db_name, user, password,target_table,source_table, column_name, columntype):
+def updateColumn(db_name, user, password,target_table,source_table, list_columns, list_type):
     try:
         con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
         cur = con.cursor()
     except:
         print "oops error"
+    for i in range(len(list_columns)):    
+        drop_column = """
+            ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS {column_name};
+        """.format(column_name = list_columns[i])
+        cur.execute(drop_column)
+            
+        add_column = """
+            ALTER TABLE trumptweets2 ADD COLUMN {column_name}  {columntype};
+        """.format(column_name=list_columns[i], columntype =list_type[i])
+        cur.execute(add_column)
         
-    drop_column = """
-        ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS {column_name};
-    """.format(column_name = column_name)
-    cur.execute(drop_column)
-        
-    add_column = """
-        ALTER TABLE trumptweets2 ADD COLUMN {column_name}  {columntype};
-    """.format(column_name=column_name, columntype =columntype)
-    cur.execute(add_column)
-    
-    update = """
-        UPDATE {target_table} t2
-        SET    {column_name} = t1.{column_name}
-        FROM   {source_table} t1
-        WHERE  t2.id = t1.id              
-    """.format(target_table=target_table,column_name=column_name,source_table=source_table)
-    cur.execute(update)
+        update = """
+            UPDATE {target_table} t2
+            SET    {column_name} = t1.{column_name}
+            FROM   {source_table} t1
+            WHERE  t2.id = t1.id              
+        """.format(target_table=target_table,column_name=list_columns[i],source_table=source_table)
+        cur.execute(update)
     #AND    t2.val2 IS DISTINCT FROM t1.val1  -- optional, to avoid empty updates
     
     con.commit()
     
     
-updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets","label","varchar(15)")
-updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets","sentiment","numeric")
+updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets",["label","sentiment"],["varchar(15)","numeric"])
     
