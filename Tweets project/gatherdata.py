@@ -90,16 +90,16 @@ class MyStreamer(TwythonStreamer):
             if 'country' in place and place['country'] != None:
                 tweet_countryname = place['country'].encode('utf-8')         
 
-        if tweet_location != "NaN" or tweet_lon != 9999:
+        if tweet_lon != 9999 or tweet_location != "NaN":
            
             # Compute coordinates from location and countryname
             if tweet_location != "NaN":
                 g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
                 outlatlon = g.latlng
-            
+
             # Feed data to database defined in beginning of script
             insert_query = r"""
-                            INSERT INTO public.trumptweets3 VALUES(
+                            INSERT INTO public.trumptweets2 VALUES(
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """
             data = (tweet_id,
@@ -131,6 +131,7 @@ def main():
         print 'Something went wrong while making connection with Twitter: '+str(ValueError)
     
     # Define what to track
+    stream.statuses.filter(track = ['trump'])   
     try:
         stream.statuses.filter(track = ['trump'])   
         #stream.statuses.filter(track = ['trump'])      

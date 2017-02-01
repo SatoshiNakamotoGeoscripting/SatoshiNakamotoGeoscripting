@@ -35,8 +35,6 @@ def getTweetsFromDB(dbname, user, password, table_name):
         list_of_tweets.append([tweet_id,tweet_text])
     return list_of_tweets
 
-tweets = getTweetsFromDB("tweets","user","user","trumptweets2")
-
 def SentimentAnalyzer(tweets):
     sid = SentimentIntensityAnalyzer() #need to nltk.download() to use all the packages
 
@@ -57,8 +55,6 @@ def SentimentAnalyzer(tweets):
         
         sentiment_tweets.append((tweet_id,sentiment,label))
     return sentiment_tweets
-                  
-sentiment_tweets = SentimentAnalyzer(tweets)
 
 ## Should we connect with the file already named createTable?
 def createTable(db_name, user, password, table_name, overwrite = False):
@@ -80,7 +76,6 @@ def createTable(db_name, user, password, table_name, overwrite = False):
     con.commit()
     cur.close()
     con.close()
-createTable(db_name="tweets", user="user", password="user", table_name = "sentiment_tweets", overwrite = True)
 
 def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
     try:
@@ -93,9 +88,8 @@ def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
         data = (tweet[0],tweet[2],tweet[1])
         cur.execute(insert_query, data)
     con.commit()
-insertSentiments("tweets","user","user","sentiment_tweets",sentiment_tweets)
 
-def updateColumn(db_name, user, password,target_table,source_table, list_columns, list_type):
+def updateColumns(db_name, user, password,target_table,source_table, list_columns, list_type):
     try:
         con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
         cur = con.cursor()
@@ -103,13 +97,13 @@ def updateColumn(db_name, user, password,target_table,source_table, list_columns
         print "oops error"
     for i in range(len(list_columns)):    
         drop_column = """
-            ALTER TABLE trumptweets2 DROP COLUMN IF EXISTS {column_name};
-        """.format(column_name = list_columns[i])
+            ALTER TABLE {target_table} DROP COLUMN IF EXISTS {column_name};
+        """.format(target_table = target_table, column_name = list_columns[i])
         cur.execute(drop_column)
             
         add_column = """
-            ALTER TABLE trumptweets2 ADD COLUMN {column_name}  {columntype};
-        """.format(column_name=list_columns[i], columntype =list_type[i])
+            ALTER TABLE {target_table} ADD COLUMN {column_name}  {columntype};
+        """.format(target_table = target_table, column_name=list_columns[i], columntype =list_type[i])
         cur.execute(add_column)
         
         update = """
@@ -122,7 +116,10 @@ def updateColumn(db_name, user, password,target_table,source_table, list_columns
     #AND    t2.val2 IS DISTINCT FROM t1.val1  -- optional, to avoid empty updates
     
     con.commit()
-    
-    
-updateColumn("tweets", "user", "user","trumptweets2","sentiment_tweets",["label","sentiment"],["varchar(15)","numeric"])
+
+tweets = getTweetsFromDB("tweets","user","user","trumptweets2")
+sentiment_tweets = SentimentAnalyzer(tweets)
+createTable(db_name="tweets", user="user", password="user", table_name = "sentiment_tweets", overwrite = True)    
+insertSentiments("tweets","user","user","sentiment_tweets",sentiment_tweets)
+updateColumns("tweets", "user", "user","trumptweets2","sentiment_tweets",["label","sentiment"],["varchar(15)","numeric"])
     
