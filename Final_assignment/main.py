@@ -4,11 +4,24 @@ Created on Wed Feb  1 10:51:48 2017
 
 @author: Satoshi Nakamoto
 names: Alex Levering and Hector Muro
+
+Non-standard dependencies:
+* Twython
+* NLTK
+* Folium
+* psycopg2
+
+TO DO BEFOREHAND:
+The following steps are non-automatable and have to be performed manually.
+* Have the NLTK vader lexicon locally (nltk.download("vader"))
+   - It may be that the lexicon does not install in the right location
+     If this is the case, locate the file and place it #TODO: FILEPATH
+* In case you wish to stream data, enter the 
 """
 
 # Change working directory to load scripts if needed
 import os
-os.chdir(r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment")
+os.chdir(r"/home/user/Desktop/git/SatoshiNakamotoGeoscripting/Final_assignment")
 
 from lib import gatherData
 from lib import dataManagement
@@ -16,22 +29,21 @@ from lib import sentimentAnalyzerVader #MUST FIX ISSUES HERE
 from lib import storeSentimentData
 from lib import visualizeData
 
-os.chdir(r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment/data")
+os.chdir(r"/home/user/Desktop/git/SatoshiNakamotoGeoscripting/Final_assignment")
 
 """Database must be created beforehand manually in Postgres"""
 #createTable.createTable(db_name=, user=, password=, table_name=, overwrite = False)
-dataManagement.createPostgreSQLTable(db_name="tweets", user="user", password="user", table_name = "trumptweets", overwrite = False)
+dataManagement.createPostgreSQLTable(db_name="postgres", user="user", password="user", table_name = "t_tweets", overwrite = False)
 
 """Connection with Twitter in real-time gathering data. The table where tweets are going to be inserted is set by default "trumptweets"
     If another name is wanted, or the name is changed in the create Table call, it must be changed manually inside gatherData.py"""
-# gatherData.TweetsRealTime()
+gatherData.TweetsRealTime()
 
 """Retrieve tweets for further sentiment analysis, selecting only those in english because the sentiment library understands English only"""
 sql = "SELECT * FROM trumptweets WHERE lang = 'en' or lower(lang) = 'en-GB' or lower(lang) = 'en-US'"
 tweets = dataManagement.getTweetsFromDB("tweets","user", "user", sql)
 
 """Sentiment analysis"""
-"""This requires the manual download of vader_lexicon.txt. Use nltk.download() once nltk library is downloaded"""
 #import nltk
 #nltk.download
 sentiment_tweets = sentimentAnalyzerVader.SentimentAnalyzer(tweets)

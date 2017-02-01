@@ -8,10 +8,6 @@ import psycopg2
 from os import system
 import urllib2
 
-def downloadGeoJSON(url, output_name):
-    response = urllib2.urlopen('http://www.example.com/')
-    html = response.read(url)
-
 def getTweetsFromDB(dbname, username, password, sql):
     """From an existing Tweets database, collect all records"""
     con = psycopg2.connect("dbname={} user={} password={}".format(dbname, username, password))
@@ -37,13 +33,9 @@ def importPolyJSON(dbname, username, password, geojson, output_table_name):
     system(bash)
     
 def createPostgreSQLTable(db_name, user, password, table_name, overwrite = False):
-    try:
-        con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
-        cursor = con.cursor()
-        print "connected"
-    except:
-        print "connection failed!"
-        
+    con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
+    cur = con.cursor()
+    
     if overwrite == True:
         del_table_query = """DROP TABLE IF EXISTS {table_name};""".format(table_name = table_name)
         cursor.execute(del_table_query)
@@ -63,9 +55,9 @@ def createPostgreSQLTable(db_name, user, password, table_name, overwrite = False
                     loclat   decimal,
                     loclong  decimal);
                 """.format(table_name = table_name)
-    cursor.execute(insert_query)
+    cur.execute(insert_query)
     con.commit()
-    cursor.close()
+    cur.close()
     con.close()
 
 def exportPostgresqltoGeoJSON(dbname, username, password, output_filename):
