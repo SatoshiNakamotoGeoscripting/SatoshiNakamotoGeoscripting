@@ -98,8 +98,10 @@ class MyStreamer(TwythonStreamer):
                 outlatlon = g.latlng
 
             # Feed data to database defined in beginning of script
+            """Table name must be entered manually in case another name is wanted
+                If not, name is the same as specified in "createTable.py"""
             insert_query = r"""
-                            INSERT INTO public.trumptweets2 VALUES(
+                            INSERT INTO public.trumptweets VALUES(
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """
             data = (tweet_id,
@@ -130,12 +132,8 @@ def main():
         cur.close()
         print 'Something went wrong while making connection with Twitter: '+str(ValueError)
     
-    # Define what to track
-    stream.statuses.filter(track = ['trump'])   
     try:
         stream.statuses.filter(track = ['trump'])   
-        #stream.statuses.filter(track = ['trump'])      
-        #stream.statuses.filter(track = ['alcohol,drugs,narcotics,cannabis,marijuana,ganja,xtc,mdma,cocaine,heroin,opium,amphetamines,methamfetamines,lsd'])
     except:
         # Shortcut to restarting the script - if the connection cancels then it gracefully terminates the db lock and establishes a new connection
         cur.close
