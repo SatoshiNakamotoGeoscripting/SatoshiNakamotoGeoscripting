@@ -55,7 +55,7 @@ dataManagement.importPolyJSON(dbname = "tweets",
                                geojson = "countries.geo.json",
                                output_table_name = "countrydata")
                               
-dataManagement.exportPostgresqltoGeojson(dbname = "tweets",
+dataManagement.exportPostgresqltoGeoJSON(dbname = "tweets",
                                           username = "user",
                                           password = "user",
                                           output_filename = "tweetspercountry")                              
@@ -66,8 +66,7 @@ records = visualizeData.getPointsPerPolygon(dbname = "tweets",
                                           poly_table_name = "countrydata",
                                           tweet_table_name = "trumptweets")
 
-filtered_tweets = dataManagement.filterTweetsToData(tweets)
-              
+filtered_tweets = dataManagement.filterTweetsToData(tweets)         
 trump_tweets = visualizeData.tweetMap(filtered_tweets, 3, "cartodbpositron")
 trump_tweets.addTweets()
 trump_tweets.addChoropleths("tweetspercountry.geojson", records)

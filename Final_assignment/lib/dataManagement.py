@@ -6,6 +6,11 @@ Created on Wed Feb  1 11:35:10 2017
 """
 import psycopg2
 from os import system
+import urllib2
+
+def downloadGeoJSON(url, output_name):
+    response = urllib2.urlopen('http://www.example.com/')
+    html = response.read(url)
 
 def getTweetsFromDB(dbname, username, password, sql):
     """From an existing Tweets database, collect all records"""
@@ -63,7 +68,7 @@ def createPostgreSQLTable(db_name, user, password, table_name, overwrite = False
     cursor.close()
     con.close()
 
-def exportPostgresqltoGeojson(dbname, username, password, output_filename):
+def exportPostgresqltoGeoJSON(dbname, username, password, output_filename):
     """Using bash, export a postgresql table to GeoJSON format"""
     # Export temporary table to GeoJSON
     bash = 'ogr2ogr -f "GeoJSON" {geojson}.geojson PG:"dbname={dbname} user={user} password={password}" "temp"'.format(
