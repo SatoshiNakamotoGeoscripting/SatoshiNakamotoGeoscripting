@@ -24,7 +24,7 @@ def getTweetsFromDB(dbname, user, password, table_name):
     cursor = conn.cursor()
     
     # Retrieve data from database and extract coordinates
-    cursor.execute("SELECT * FROM {} WHERE lang = 'en'".format(table_name))
+    cursor.execute("SELECT * FROM {} WHERE lang = 'en' or lang = 'en-GB'".format(table_name))
     records = cursor.fetchall()
     
     list_of_tweets = []
