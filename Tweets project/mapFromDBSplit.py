@@ -3,7 +3,7 @@
 """
 Created on Thu Jan 26 14:02:08 2017
 
-@author: user
+@author: Hector Muro and Alex Levering
 """
 
 import psycopg2
@@ -12,8 +12,8 @@ import folium
 import pandas
 import sys  
 reload(sys) #Prevents errors with utf-8 encoding not working properly
-from os import system
 sys.setdefaultencoding('utf8')
+from os import system
 
 def getTweetsFromDB(dbname, username, password, tweet_table_name):
     """From an existing Tweets database, collect all records"""
@@ -33,7 +33,8 @@ def importPolyJSON(dbname, username, password, geojson, output_table_name):
     """Import specified geojson file into postgresql spatial db"""
     # http://gis.stackexchange.com/questions/172092/import-geojson-into-postgis
     # http://morphocode.com/using-ogr2ogr-convert-data-formats-geojson-postgis-esri-geodatabase-shapefiles/
-    bash = 'ogr2ogr -f "PostgreSQL" PG:"dbname={dbname} user={user}" "{geojson}" -nln {output_table_name}'.format(
+    # PolyJSON source: https://github.com/johan/world.geo.json
+    bash = 'ogr2ogr -f "PostgreSQL" PG:"dbname={dbname} user={user}" "{geojson}" -nln {output_table_name} -overwrite'.format(
             dbname = dbname,
             user = username,
             geojson = geojson,
@@ -108,120 +109,15 @@ def filterTweetsToData(all_tweets):
     return list_of_tweets
     
     return tweet_map
-def mapFromTweets(all_tweets, output_html_name = "tweet_map", polygon_geojson = False, polygon_data = False, save = True):
-    """From a list of tweets, derive the lat/lon and create a Folium map"""
-    
-    #TODO: implement sources
-    #https://blog.dominodatalab.com/creating-interactive-crime-maps-with-folium/
-    #http://deparkes.co.uk/2016/06/24/folium-marker-clusters/
-
-    
-    
- 
-    
-    world_geojson = r'countries.geo.json'
-    
-    
-    # Make polygon layers with data
-    if polygon_geojson != False and type(polygon_data) != bool:
-
-        # Make an exponential colour ramp
-        value_ramp = list(reversed([mean(polygon_data['numoftweets'])/i for i in range(1,6)]))
-           
-        tweet_map.choropleth(geo_path = polygon_geojson, data = polygon_data,
-             columns=['name', 'numoftweets'],
-             threshold_scale = value_ramp,
-             key_on='feature.properties.name',
-             fill_color='BuPu', fill_opacity=0.7, line_opacity=0.5,
-             legend_name = 'number of tweets',
-             reset=True)
-            
-        tweet_map.choropleth(geo_path = polygon_geojson, data = polygon_data,
-             columns=['name', 'avgsentiment'],
-             threshold_scale = [-0.25, -0.125, 0, 0.125, 0.25],
-             key_on = 'feature.properties.name',
-             fill_color = 'RdYlGn', fill_opacity = 0.7, line_opacity = 0.5, # Supported palettes: https://github.com/python-visualization/folium/pull/28/files
-             legend_name = 'average sentiment',
-             reset=True)
-        
-        # How do people come up with this stuff!??
-        # https://github.com/python-visualization/folium/issues/458
-        countries = folium.FeatureGroup(name="Countries")
-        
-        for lat, lon, name, avgsentiment in zip(polygon_data['lat'], polygon_data['lon'], polygon_data['name'], polygon_data['avgsentiment']):
-            countries.add_child(folium.RegularPolygonMarker(
-                location=[lat,lon],
-                fill_color='#Ff0000',
-                number_of_sides=4,
-                radius=12,
-                fill_opacity = 0.6,
-                popup = folium.Popup(folium.element.IFrame(
-                    html="<b>Country:</b> {} <br> <b>sentiment:</b> {:1.6s}".format(name, str(avgsentiment)),
-                    width=200, height=100),
-                    max_width=200)))
-        
-        tweet_map.add_child(countries)
-    elif type(polygon_data) != bool:
-        tweet_map.geo_json(geo_path = polygon_geojson, fill_color='#132b5e')
-        
-    
-    # Create points to plot onto the map    
-    tweet_cluster = folium.MarkerCluster("Tweets").add_to(tweet_map)
-    
-    for tweet in list_of_tweets:
-        tweet_text = tweet[0]
-        sentiment = tweet[1]        
-        coords = tweet[-1]
-        # html rendering source: http://stackoverflow.com/questions/29535715/python-with-folium-how-can-i-embed-a-webpage-in-the-popup
-        html =  r"""{text} <br>
-                <b> sentiment: </b>{sentiment}, {power} <br>
-                <b> accurate location? </b> {accuracy} 
-                """.format(text = tweet_text, accuracy = coords[2], sentiment = sentiment[0], power = sentiment[1])
-        folium.Marker([coords[0], coords[1]],
-        popup = folium.Popup(folium.element.IFrame(
-            html=html,
-            width=250, height=250),
-            max_width=250)).add_to(tweet_cluster)
-     
-    folium.LayerControl().add_to(tweet_map)
-
-    if save == True:
-        tweet_map.save("{}.html".format(output_html_name))
-    return tweet_map
 
 class tweetMap:
     def __init__(self, list_of_tweets, zoom_start, tiles):
         self.list_of_tweets = list_of_tweets
         self.mean_long = mean([tweet[-1][0] for tweet in list_of_tweets])
-        self.mean_lat = mean([tweet[-1][1] for tweet in list_of_tweets])          
+        self.mean_lat = mean([tweet[-1][1] for tweet in list_of_tweets])   
+        # Map tiles reference: http://www.digital-geography.com/python-and-webmaps-folium/#.WJHFHmelt75
         self.map = folium.Map(location=[self.mean_long, self.mean_lat], zoom_start = zoom_start, tiles = tiles)
 
-    def addChoropleths(self, polygon_geojson, polygon_data):
-        """Adds choropleth layers to the map"""
-        if polygon_geojson != False and type(polygon_data) != bool:
-    
-            # Make an exponential colour ramp
-            value_ramp = list(reversed([mean(polygon_data['numoftweets'])/i for i in range(1,6)]))
-               
-            self.map.choropleth(geo_path = polygon_geojson, data = polygon_data,
-                 columns=['name', 'numoftweets'],
-                 threshold_scale = value_ramp,
-                 key_on='feature.properties.name',
-                 fill_color='BuPu', fill_opacity=0.7, line_opacity=0.5,
-                 legend_name = 'number of tweets',
-                 reset=True)
-                
-            self.map.choropleth(geo_path = polygon_geojson, data = polygon_data,
-                 columns=['name', 'avgsentiment'],
-                 threshold_scale = [-0.25, -0.125, 0, 0.125, 0.25],
-                 key_on = 'feature.properties.name',
-                 fill_color = 'RdYlGn', fill_opacity = 0.7, line_opacity = 0.5, # Supported palettes: https://github.com/python-visualization/folium/pull/28/files
-                 legend_name = 'average sentiment',
-                 reset=True)
-                 
-        elif type(polygon_data) != bool:
-            self.map.geo_json(geo_path = polygon_geojson, fill_color='#132b5e')
-            
     def addPolygonCentroids(self, polygon_geojson, polygon_data):
         # How do people come up with this stuff!??
         # https://github.com/python-visualization/folium/issues/458
@@ -229,60 +125,100 @@ class tweetMap:
         for lat, lon, name, avgsentiment in zip(polygon_data['lat'], polygon_data['lon'], polygon_data['name'], polygon_data['avgsentiment']):
             countries.add_child(folium.RegularPolygonMarker(
                 location=[lat,lon],
-                fill_color='#Ff0000',
+                fill_color='#00c5ff',
                 number_of_sides=4,
-                radius=12,
-                fill_opacity = 0.6,
+                radius=6,
+                fill_opacity = 0.4,
                 popup = folium.Popup(folium.element.IFrame(
                     html="<b>Country:</b> {} <br> <b>sentiment:</b> {:1.6s}".format(name, str(avgsentiment)),
                     width=200, height=100),
                     max_width=200)))
         self.map.add_child(countries)
+
+    def addChoropleths(self, polygon_geojson, polygon_data):
+        """Adds choropleth layers to the map"""
+        if polygon_geojson != False and type(polygon_data) != bool:
+    
+            # Make an exponential colour ramp
+            self.map.choropleth(geo_path = polygon_geojson, data = polygon_data,
+                 columns=['name', 'avgsentiment'],
+                 threshold_scale = [-0.25, -0.125, 0, 0.125, 0.25],
+                 key_on = 'feature.properties.name',
+                 fill_color = 'RdYlGn', fill_opacity = 0.5, line_opacity = 0.5, # Supported palettes: https://github.com/python-visualization/folium/pull/28/files
+                 legend_name = 'average sentiment',
+                 reset=True)    
+    
+            value_ramp = list(reversed([mean(polygon_data['numoftweets'])/i for i in range(1,6)]))
+               
+            self.map.choropleth(geo_path = polygon_geojson, data = polygon_data,
+                 columns=['name', 'numoftweets'],
+                 threshold_scale = value_ramp,
+                 key_on='feature.properties.name',
+                 fill_color='BuPu', fill_opacity=0.5, line_opacity=0.5,
+                 legend_name = 'number of tweets',
+                 reset=True)
+                 
+        elif type(polygon_data) != bool:
+            self.map.geo_json(geo_path = polygon_geojson, fill_color='#132b5e')
     
     def addTweets(self):
         # Create points to plot onto the map    
-        tweet_cluster = folium.MarkerCluster("Tweets").add_to(tweet_map)
+        tweet_cluster = folium.MarkerCluster("Tweets").add_to(self.map)
         
-        for tweet in list_of_tweets:
+        # Selects a colour based on the value found. Only 5 classes are present due to limited 
+        colors_list = [[1,"blue"],[0.25,"purple"],[-0.25,"orange"],[-1,"red"]]        
+
+        for tweet in self.list_of_tweets:
             tweet_text = tweet[0]
             sentiment = tweet[1]        
-            coords = tweet[-1]
+            coords = tweet[-1]  
+            for i in range(len(colors_list)):
+                if sentiment[1] != None:
+                    if str(sentiment[1]) != '0.0':
+                        if colors_list[i][0] >= sentiment[1] >= colors_list[i+1][0]:
+                            color = colors_list[i+1][1]
+                            icon_color = "white"
+                    else:
+                        color = "white"
+                        icon_color = "black"
+                else:
+                    color = "black"
+                    icon_color = "white"
+                    
             # html rendering source: http://stackoverflow.com/questions/29535715/python-with-folium-how-can-i-embed-a-webpage-in-the-popup
             html =  r"""{text} <br>
                     <b> sentiment: </b>{sentiment}, {power} <br>
                     <b> accurate location? </b> {accuracy} 
                     """.format(text = tweet_text, accuracy = coords[2], sentiment = sentiment[0], power = sentiment[1])
             folium.Marker([coords[0], coords[1]],
-            popup = folium.Popup(folium.element.IFrame(
-                html=html,
-                width=250, height=250),
-                max_width=250)).add_to(tweet_cluster)
-         
-        folium.LayerControl().add_to(tweet_map)    
+                    icon = folium.Icon(color=color, icon_color=icon_color),
+                    popup = folium.Popup(folium.element.IFrame(
+                        html=html,
+                        width=250, height=250),
+                        max_width=250)).add_to(tweet_cluster)
+                
+    def addLayerControl(self):
+        folium.LayerControl().add_to(self.map)    
+    
+    def saveMap(self, output_html_name):
+        self.map.save("{}.html".format(output_html_name))
     
 tweets = getTweetsFromDB(dbname = "tweets",
                          username = "user",
                          password = "user",
-                         tweet_table_name = "trumptweets2")[:10]
+                         tweet_table_name = "trumptweets2")
                          
 importPolyJSON(dbname = "tweets",
                username = "user",
                password = "user",
-               geojson = "world.geo.json",
+               geojson = "countries.geo.json",
                output_table_name = "countrydata")
                               
 exportPostgresqltoGeojson(dbname = "tweets",
                           username = "user",
                           password = "user",
                           output_filename = "tweetspercountry")                              
-"""
-mapFromTweets(all_tweets = tweets,
-              output_html_name = "trumptweets2",
-              polygon_geojson = "tweetspercountry.geojson",
-              polygon_data = records,
-              save = True,
-              tiles = "Stamen Terrain")
-"""              
+          
 records = getPointsPerPolygon(dbname = "tweets",
                               username = "user",
                               password = "user",
@@ -290,7 +226,10 @@ records = getPointsPerPolygon(dbname = "tweets",
                               tweet_table_name = "trumptweets2")
 
 filtered_tweets = filterTweetsToData(tweets)
-              
-trump_tweets = tweetMap(filtered_tweets, 3, "Stamen Terrain")
+trump_tweets = tweetMap(filtered_tweets, 3, "cartodbpositron")
 trump_tweets.addChoropleths("tweetspercountry.geojson", records)
-trump_tweets.addPolygonCentroids("tweetspercountry.geojson", records) 
+trump_tweets.addPolygonCentroids("tweetspercountry.geojson", records)
+trump_tweets.addTweets()
+trump_tweets.addLayerControl()
+trump_tweets.saveMap("Trump Tweets Test")
+
