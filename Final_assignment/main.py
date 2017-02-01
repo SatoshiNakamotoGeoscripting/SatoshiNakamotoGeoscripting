@@ -13,12 +13,10 @@ Non-standard dependencies:
 
 TO DO BEFOREHAND:
 The following steps are non-automatable and have to be performed manually.
-* Have the NLTK vader lexicon locally (nltk.download("vader"))
-   - It may be that the lexicon does not install in the right location
-     If this is the case, locate the file and place it #TODO: FILEPATH
-* In case you wish to stream data, enter the 
-"""
+* Have the NLTK vader lexicon locally (nltk.download("vader") should do the trick)
+* Install PostGIS in the database
 
+"""
 # Change working directory to load scripts if needed
 import os
 os.chdir(r"/home/user/Desktop/git/SatoshiNakamotoGeoscripting/Final_assignment")
@@ -29,19 +27,19 @@ from lib import sentimentAnalyzerVader #MUST FIX ISSUES HERE
 from lib import storeSentimentData
 from lib import visualizeData
 
-os.chdir(r"/home/user/Desktop/git/SatoshiNakamotoGeoscripting/Final_assignment")
+os.chdir(r"/home/user/Desktop/git/SatoshiNakamotoGeoscripting/Final_assignment/data")
 
 """Database must be created beforehand manually in Postgres"""
 #createTable.createTable(db_name=, user=, password=, table_name=, overwrite = False)
 dataManagement.createPostgreSQLTable(db_name="postgres", user="user", password="user", table_name = "t_tweets", overwrite = False)
 
-"""Connection with Twitter in real-time gathering data. The table where tweets are going to be inserted is set by default "trumptweets"
+"""Connection with Twitter in real-time gathering data. The table where tweets are going to be inserted is set by default "t_tweets"
     If another name is wanted, or the name is changed in the create Table call, it must be changed manually inside gatherData.py"""
-gatherData.TweetsRealTime()
+# gatherData.TweetsRealTime()
 
 """Retrieve tweets for further sentiment analysis, selecting only those in english because the sentiment library understands English only"""
-sql = "SELECT * FROM trumptweets WHERE lang = 'en' or lower(lang) = 'en-GB' or lower(lang) = 'en-US'"
-tweets = dataManagement.getTweetsFromDB("tweets","user", "user", sql)
+sql = "SELECT * FROM t_tweets WHERE lang = 'en' or lower(lang) = 'en-GB' or lower(lang) = 'en-US'"
+tweets = dataManagement.getTweetsFromDB("postgres","user", "user", sql)
 
 """Sentiment analysis"""
 #import nltk
@@ -49,34 +47,34 @@ tweets = dataManagement.getTweetsFromDB("tweets","user", "user", sql)
 sentiment_tweets = sentimentAnalyzerVader.SentimentAnalyzer(tweets)
 
 """Store in another table of the database the sentiment data just created and then add it to the original Tweetstable"""
-storeSentimentData.createTable(db_name="tweets", user="user", password="user", table_name = "sentiment_table", overwrite = False)
-storeSentimentData.insertSentiments(db_name="tweets", user="user", password="user", table_name = "sentiment_table",sentiment_tweets=sentiment_tweets)
-storeSentimentData.updateColumns(db_name="tweets", user="user", password="user",tweets_table="trumptweets",
+storeSentimentData.createTable(db_name="postgres", user="user", password="user", table_name = "sentiment_table", overwrite = False)
+storeSentimentData.insertSentiments(db_name="postgres", user="user", password="user", table_name = "sentiment_table",sentiment_tweets=sentiment_tweets)
+storeSentimentData.updateColumns(db_name="postgres", user="user", password="user",tweets_table="t_tweets",
                                  sentiment_table="sentiment_table", list_columns = ["label","sentiment"], list_type=["varchar(15)", "numeric"])
 
 
 """Visualize data"""
-tweets = dataManagement.getTweetsFromDB(dbname = "tweets",
+tweets = dataManagement.getTweetsFromDB(dbname = "postgres",
                                          username = "user",
                                          password = "user",
-                                         sql = "SELECT * FROM trumptweets")[-10:]
+                                         sql = "SELECT * FROM t_tweets")
                          
-dataManagement.importPolyJSON(dbname = "tweets",
+dataManagement.importPolyJSON(dbname = "postgres",
                                username = "user",
                                password = "user",
                                geojson = "countries.geo.json",
                                output_table_name = "countrydata")
                               
-dataManagement.exportPostgresqltoGeoJSON(dbname = "tweets",
+dataManagement.exportPostgresqltoGeoJSON(dbname = "postgres",
                                           username = "user",
                                           password = "user",
                                           output_filename = "tweetspercountry")                              
               
-records = visualizeData.getPointsPerPolygon(dbname = "tweets",
+records = visualizeData.getPointsPerPolygon(dbname = "postgres",
                                           username = "user",
                                           password = "user",
                                           poly_table_name = "countrydata",
-                                          tweet_table_name = "trumptweets")
+                                          tweet_table_name = "t_tweets")
 
 filtered_tweets = dataManagement.filterTweetsToData(tweets)         
 trump_tweets = visualizeData.tweetMap(filtered_tweets, 3, "cartodbpositron")

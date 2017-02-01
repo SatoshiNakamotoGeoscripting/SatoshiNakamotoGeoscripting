@@ -24,7 +24,7 @@ OAUTH_TOKEN_SECRET = "maoKC8LRS2rxpRmSz9mUbOCTc8TE2VxAaBJQTue2stqQS"
 
 # Attempt to establish a connection to the database
 try:
-    con = psycopg2.connect("dbname=tweets user=user password=user" )
+    con = psycopg2.connect("dbname=postgres user=user password=user" )
     cur = con.cursor()
     print "Connected"
 except:
@@ -91,39 +91,42 @@ class MyStreamer(TwythonStreamer):
                 tweet_countrycode = place['country_code'].encode('utf-8')
             if 'country' in place and place['country'] != None:
                 tweet_countryname = place['country'].encode('utf-8')         
-
+        
         if tweet_lon != 9999 or tweet_location != "NaN":
            
-            # Compute coordinates from location and countryname
-            if tweet_location != "NaN":
-                g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
-                outlatlon = g.latlng
-
+        # Compute coordinates from location and countryname
+            try:
+                if tweet_location != "NaN":
+                    g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
+                    outlatlon = g.latlng
+                """Table name must be entered manually in case another name is wanted
+                    If not, name is the same as specified in "createTable.py"""
+                insert_query = r"""
+                                INSERT INTO public.t_tweets VALUES(
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                """
+                data = (tweet_id,
+                        str(tweet_datetime),
+                        tweet_lat,
+                        tweet_lon,
+                        str(tweet_city),
+                        str(tweet_lang),
+                        str(tweet_source),
+                        str(tweet_countrycode),
+                        str(tweet_countryname),
+                        str(tweet_location),
+                        str(hyperlink),
+                        str(tweet_text),
+                        outlatlon[0],
+                        outlatlon[1])
+                cur.execute(insert_query, data)
+                con.commit()
+                print hyperlink
+                print tweet_text                
+            except:
+                print "could not decode lat/lon"
             # Feed data to database defined in beginning of script
-            """Table name must be entered manually in case another name is wanted
-                If not, name is the same as specified in "createTable.py"""
-            insert_query = r"""
-                            INSERT INTO public.trumptweets VALUES(
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                            """
-            data = (tweet_id,
-                    str(tweet_datetime),
-                    tweet_lat,
-                    tweet_lon,
-                    str(tweet_city),
-                    str(tweet_lang),
-                    str(tweet_source),
-                    str(tweet_countrycode),
-                    str(tweet_countryname),
-                    str(tweet_location),
-                    str(hyperlink),
-                    str(tweet_text),
-                    outlatlon[0],
-                    outlatlon[1])
-            cur.execute(insert_query, data)
-            con.commit()
-            print hyperlink
-            print tweet_text
+
 def TweetsRealTime():
     # Create a connection to the API
     try:
@@ -141,7 +144,7 @@ def TweetsRealTime():
         cur.close
         con.close        
         print "########### Stream terminated ###########"
-        TweetsRealTime()
+        stream.statuses.filter(track = ['trump'])   
         
-#if __name__ == '__main__':
-#    TweetsRealTime()
+if __name__ == '__main__':
+    TweetsRealTime()
