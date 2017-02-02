@@ -32,15 +32,15 @@ if __name__ == "__main__":
     """
     import tweetAnalysisWrapper
     tweetAnalysisWrapper.performTweetResearch(folder_path = r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment",
-                                              defaultdb = "postgres",
+                                              defaultdb = "postgres", # Making a new database requires connecting to an existing database
                                               user = "user",
                                               password = "user",
-                                              ouputdb = "tweet_research",
-                                              tweet_table_name = "tweets",
-                                              gather_data = False,
-                                              search_terms = ["Trump"],                                              
-                                              loop_gathering = False,
-                                              APP_KEY = "",
+                                              ouputdb = "trump", # Specify the output database that is to be created
+                                              tweet_table_name = "tweets", #Output table where the Tweets are stored
+                                              gather_data = False, # When True: Will gather data from the Twitter stream
+                                              search_terms = ["Trump"], #Twitter terms to search for                                   
+                                              loop_gathering = False, #When True: Will not stop when terminated - use for prolonged gathering
+                                              APP_KEY = "", #Get these from developer.twitter.com when you make your application
                                               APP_SECRET =  "",
                                               OAUTH_TOKEN =  "",
                                               OAUTH_TOKEN_SECRET = "")
