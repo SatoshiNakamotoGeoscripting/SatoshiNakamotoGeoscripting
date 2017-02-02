@@ -17,8 +17,8 @@ from os import system
 
 def getPointsPerPolygon(dbname, username, password, poly_table_name, tweet_table_name):
     """Perform spatial query to count statistics per table. Expects same SRS"""
-    conn = psycopg2.connect("dbname={} user={} password={}".format(dbname, username, password))
-    cur = conn.cursor()
+    con = psycopg2.connect("dbname={} user={} password={}".format(dbname, username, password))
+    cur = con.cursor()
     
     # Geometry gets loaded at EWKB, which has to be decoded into geom format before PostGIS can use it.
     # The XY-coords derived from the tweets have to be referenced using ST_MakePoint
@@ -35,11 +35,12 @@ def getPointsPerPolygon(dbname, username, password, poly_table_name, tweet_table
          """.format(poly = poly_table_name, points = tweet_table_name)  
     
     # Perform spatial query to count statistics per table
-    cur.execute("DROP TABLE IF EXISTS temp; CREATE TABLE temp AS " + sql) # Deletes table if it exists, then recreates it
-    conn.commit()
+    cur.execute("DROP TABLE IF EXISTS temp; CREATE TABLE polygonStatistics AS " + sql) # Deletes table if it exists, then recreates it
+    con.commit()
     
     cur.execute(sql)
     records = cur.fetchall()  
+    con.commit()
     
     # Retrieve table headers
     headers = [desc[0] for desc in cur.description]
@@ -48,9 +49,8 @@ def getPointsPerPolygon(dbname, username, password, poly_table_name, tweet_table
     poly_df = pandas.DataFrame(records, columns = headers)    
     
     # Terminate connection calls
-    conn.close()
+    con.close()
     cur.close()
-    
     return poly_df
     
 def filterTweetsToData(all_tweets):
@@ -110,7 +110,9 @@ class tweetMap:
                  legend_name = 'average sentiment',
                  reset=True)    
     
+            # Create a value ramp by dividing with the mean, then make the numbers integers and ensure that there is a ramp-up
             value_ramp = list(reversed([mean(polygon_data['numoftweets'])/i for i in range(1,6)]))
+            value_ramp = [int(i)+1 for i in value_ramp]
                
             self.map.choropleth(geo_path = polygon_geojson, data = polygon_data,
                  columns=['name', 'numoftweets'],

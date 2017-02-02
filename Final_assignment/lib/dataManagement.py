@@ -8,32 +8,36 @@ import psycopg2
 from os import system
 import urllib2
 
-def getTweetsFromDB(dbname, username, password, sql):
-    """From an existing Tweets database, collect all records"""
-    con = psycopg2.connect("dbname={} user={} password={}".format(dbname, username, password))
-    cur = con.cursor()
-    
-    # Retrieve data from database and extract coordinates
-    cur.execute(sql)
-    records = cur.fetchall()
-    
-    con.close()
-    cur.close()
-    return records
+def createDatabase(default_dbname, new_dbname, user, password):
+    try:    
+        con = psycopg2.connect("dbname={} user={} password={}".format(default_dbname, user, password))
+        con.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+        cur = con.cursor()
+    except:
+        print "Unable to connect to the database or set the isolation level"
+    try:
+        insert_query = """CREATE DATABASE {dbname};""".format(dbname = new_dbname)
+        cur.execute(insert_query)
+        con.commit()
+        cur.close()
+        con.close()
+    except:
+        print "Failed to create database. It might already exist or you do not have the rights to make a new database."
 
-def importPolyJSON(dbname, username, password, geojson, output_table_name):
-    """Import specified geojson file into postgresql spatial db"""
-    # http://gis.stackexchange.com/questions/172092/import-geojson-into-postgis
-    # http://morphocode.com/using-ogr2ogr-convert-data-formats-geojson-postgis-esri-geodatabase-shapefiles/
-    bash = 'ogr2ogr -f "PostgreSQL" PG:"dbname={dbname} user={user}" "{geojson}" -nln {output_table_name} -overwrite'.format(
-            dbname = dbname,
-            user = username,
-            geojson = geojson,
-            output_table_name = output_table_name)
-    system(bash)
-    
-def createPostgreSQLTable(db_name, user, password, table_name, overwrite = False):
-    con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
+def createPostGISExtension(dbname, user, password):
+    con = psycopg2.connect("dbname={} user={} password={}".format(dbname, user, password))
+    cur = con.cursor()
+    try:
+        insert_query = """CREATE EXTENSION PostGIS;"""
+        cur.execute(insert_query)
+        con.commit()
+    except:
+        print "Extension PostGIS already exists, or PostGIS is not installed"
+    cur.close()
+    con.close()
+
+def createPostgreSQLTable(dbname, user, password, table_name, overwrite = False):
+    con = psycopg2.connect("dbname={} user={} password={}".format(dbname, user, password))
     cur = con.cursor()
     
     if overwrite == True:
@@ -60,15 +64,39 @@ def createPostgreSQLTable(db_name, user, password, table_name, overwrite = False
     cur.close()
     con.close()
 
+def getTweetsFromDB(dbname, username, password, sql):
+    """From an existing Tweets database, collect all records"""
+    con = psycopg2.connect("dbname={} user={} password={}".format(dbname, username, password))
+    cur = con.cursor()
+    
+    # Retrieve data from database and extract coordinates
+    cur.execute(sql)
+    records = cur.fetchall()
+    
+    con.close()
+    cur.close()
+    return records
+
+def importPolyJSON(dbname, username, password, geojson, output_table_name):
+    """Import specified geojson file into postgresql spatial db"""
+    # http://gis.stackexchange.com/questions/172092/import-geojson-into-postgis
+    # http://morphocode.com/using-ogr2ogr-convert-data-formats-geojson-postgis-esri-geodatabase-shapefiles/
+    bash = 'ogr2ogr -f "PostgreSQL" PG:"dbname={dbname} user={user}" "{geojson}" -nln {output_table_name} -overwrite'.format(
+            dbname = dbname,
+            user = username,
+            geojson = geojson,
+            output_table_name = output_table_name)
+    system(bash)
+
 def exportPostgresqltoGeoJSON(dbname, username, password, output_filename):
     """Using bash, export a postgresql table to GeoJSON format"""
     # Export temporary table to GeoJSON
-    bash = 'ogr2ogr -f "GeoJSON" {geojson}.geojson PG:"dbname={dbname} user={user} password={password}" "temp"'.format(
+    bash = 'ogr2ogr -f "GeoJSON" {geojson} PG:"dbname={dbname} user={user} password={password}" "polygonStatistics"'.format(
         dbname = dbname,
         user = username,
         password = password,
         geojson = output_filename)    
-    system(bash)  
+    system(bash)
 
 def filterTweetsToData(all_tweets):
     """Select relevant data from all returned records for marker assignment"""

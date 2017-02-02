@@ -6,12 +6,12 @@ Created on Wed Feb  1 11:44:55 2017
 """
 import psycopg2
 ## Should we connect with the file already named createTable?
-def createTable(db_name, user, password, table_name, overwrite = False):
+def createSentimentTable(dbname, user, password, table_name, overwrite = False):
     try:
-        con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
+        con = psycopg2.connect("dbname={} user={} password={}".format(dbname, user, password))
         cur = con.cursor()
     except:
-        print "oops error"
+        print "Error while creating sentiment table"
         
     if overwrite == True:
         del_table_query = """DROP TABLE IF EXISTS {table_name};""".format(table_name = table_name)
@@ -26,24 +26,24 @@ def createTable(db_name, user, password, table_name, overwrite = False):
     cur.close()
     con.close()
 
-def insertSentiments(db_name, user, password, table_name, sentiment_tweets):
+def insertSentiments(dbname, user, password, table_name, sentiment_tweets):
     try:
-        con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
+        con = psycopg2.connect("dbname={} user={} password={}".format(dbname, user, password))
         cur = con.cursor()
     except:
-        print "oops error"
+        print "Error while inserting sentiments"
     for tweet in sentiment_tweets:
         insert_query = r"""INSERT INTO public.{table_name} VALUES (%s,%s,%s)""".format(table_name=table_name)
         data = (tweet[0],tweet[2],tweet[1])
         cur.execute(insert_query, data)
     con.commit()
 
-def updateColumns(db_name, user, password,tweets_table,sentiment_table, list_columns, list_type):
+def updateColumns(dbname, user, password,tweets_table,sentiment_table, list_columns, list_type):
     try:
-        con = psycopg2.connect("dbname={} user={} password={}".format(db_name, user, password))
+        con = psycopg2.connect("dbname={} user={} password={}".format(dbname, user, password))
         cur = con.cursor()
     except:
-        print "oops error"
+        print "Error while updating columns"
     for i in range(len(list_columns)):    
         drop_column = """
             ALTER TABLE {tweets_table} DROP COLUMN IF EXISTS {column_name};
@@ -65,12 +65,6 @@ def updateColumns(db_name, user, password,tweets_table,sentiment_table, list_col
     #AND    t2.val2 IS DISTINCT FROM t1.val1  -- optional, to avoid empty updates
     
     con.commit()
-    
-def store(db_name,user,password,sentiment_tweets, sentiment_table,tweets_table,list_columns,list_types):
-    createTable(db_name, user, password, sentiment_table, overwrite = False)
-    insertSentiments(db_name, user, password, sentiment_table, sentiment_tweets)
-    updateColumns(db_name, user, password,tweets_table,sentiment_table, list_columns, list_type)
-    
     
     
     
