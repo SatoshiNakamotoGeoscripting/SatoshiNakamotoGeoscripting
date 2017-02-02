@@ -142,7 +142,16 @@ def TweetsRealTime(dbname, user, password, table_name, APP_KEY, APP_SECRET, OAUT
         con.close        
         print "########### Stream terminated ###########"
         if loop_gathering != False:
-            stream.statuses.filter(track = search_terms)
+            TweetsRealTime(dbname = dbname,
+                                    user = user,
+                                    password = password,
+                                    table_name = table_name,
+                                    search_terms = search_terms,
+                                    APP_KEY = APP_KEY,
+                                    APP_SECRET =  APP_SECRET,
+                                    OAUTH_TOKEN =  OAUTH_TOKEN,
+                                    OAUTH_TOKEN_SECRET = OAUTH_TOKEN_SECRET,
+                                    loop_gathering = loop_gathering)
         
 if __name__ == '__main__':
     TweetsRealTime(dbname = "tweets",

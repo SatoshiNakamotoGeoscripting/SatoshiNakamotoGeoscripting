@@ -78,12 +78,12 @@ def performTweetResearch(folder_path,
                                         user = user,
                                         password = password,
                                         table_name = tweet_table_name,
-                                        search_terms = ["Trump"],
+                                        search_terms = search_terms,
                                         APP_KEY = APP_KEY,
                                         APP_SECRET =  APP_SECRET,
                                         OAUTH_TOKEN =  OAUTH_TOKEN,
                                         OAUTH_TOKEN_SECRET = OAUTH_TOKEN_SECRET,
-                                        loop_gathering = False)
+                                        loop_gathering = loop_gathering)
         else:
             print "Twitter API tokens have not been specified. If you do not have them, make an account at developer.twitter.com and make a new application"
     
