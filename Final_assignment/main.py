@@ -35,8 +35,8 @@ if __name__ == "__main__":
                                               defaultdb = "postgres", # Making a new database requires connecting to an existing database
                                               user = "user",
                                               password = "user",
-                                              ouputdb = "tweets", # Specify the output database that is to be created
-                                              tweet_table_name = "trumptweets2", # Output table where the Tweets are stored
+                                              ouputdb = "tweet_research", # Specify the output database that is to be created
+                                              tweet_table_name = "tweets", # Output table where the Tweets are stored
                                               gather_data = True, # When True: Will gather data from the Twitter stream
                                               search_terms = ["Trump"], # Twitter terms to search for                                   
                                               loop_gathering = False, # When True: Will not stop when terminated - use for prolonged gathering
