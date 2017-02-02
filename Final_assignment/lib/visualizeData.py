@@ -35,7 +35,7 @@ def getPointsPerPolygon(dbname, username, password, poly_table_name, tweet_table
          """.format(poly = poly_table_name, points = tweet_table_name)  
     
     # Perform spatial query to count statistics per table
-    cur.execute("DROP TABLE IF EXISTS temp; CREATE TABLE polygonStatistics AS " + sql) # Deletes table if it exists, then recreates it
+    cur.execute("DROP TABLE IF EXISTS polygonStatistics; CREATE TABLE polygonStatistics AS " + sql) # Deletes table if it exists, then recreates it
     con.commit()
     
     cur.execute(sql)

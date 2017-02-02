@@ -21,20 +21,30 @@ The following steps are non-automatable and have to be performed manually.
 * Upgrade folium to the latest version (0.2.1)
 """
 
-# Change working directory to load scripts if needed
-import os
-os.chdir(r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment")
-
-from lib import gatherData
-from lib import dataManagement
-from lib import sentimentAnalyzerVader
-from lib import storeSentimentData
-from lib import visualizeData
-
-os.chdir(r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment/data")
-
 #------------------------------------------------------------------------------------
-def performTweetResearch(user, password, defaultdb = "postgresql", ouputdb = "tweetresearch", tweet_table_name = "tweets", gather_data = False):
+def performTweetResearch(folder_path,
+                         user,
+                         password,
+                         defaultdb = "postgresql",
+                         ouputdb = "tweetresearch",
+                         tweet_table_name = "tweets",
+                         gather_data = False,
+                         loop_gathering = False,
+                         APP_KEY = False,
+                         APP_SECRET = False,
+                         OAUTH_TOKEN = False,
+                         OAUTH_TOKEN_SECRET = False):
+    # Change working directory to load scripts if needed
+    import os
+    os.chdir(folder_path)
+    
+    from lib import gatherData
+    from lib import dataManagement
+    from lib import sentimentAnalyzerVader
+    from lib import storeSentimentData
+    from lib import visualizeData
+    
+    os.chdir(folder_path + r"/data")
     """Wrapper function that abstracts database creation, table names and other variables that are tedious to set"""
     # Abstracted table names
     sentiment_table_name = "sentiment"
@@ -59,7 +69,18 @@ def performTweetResearch(user, password, defaultdb = "postgresql", ouputdb = "tw
                                          overwrite = False)
     
     if gather_data != False: # In case a different output_dbname is specified, alter the getData script to connect to the other database instead
-        gatherData.TweetsRealTime()
+        if OAUTH_TOKEN_SECRET != False:
+            gatherData.TweetsRealTime(dbname = ouputdb,
+                                        user = user,
+                                        password = password,
+                                        table_name = tweet_table_name,
+                                        APP_KEY = APP_KEY,
+                                        APP_SECRET =  APP_SECRET,
+                                        OAUTH_TOKEN =  OAUTH_TOKEN,
+                                        OAUTH_TOKEN_SECRET = OAUTH_TOKEN_SECRET,
+                                        loop_gathering = False)
+        else:
+            print "Twitter API tokens have not been specified. If you do not have them, make an account at developer.twitter.com and make a new application"
     
     """Retrieve tweets for further sentiment analysis, selecting only those in english because the sentiment library understands English only"""
     sql = "SELECT * FROM {table} WHERE lang = 'en' or lower(lang) = 'en-GB' or lower(lang) = 'en-US'".format(table = tweet_table_name)

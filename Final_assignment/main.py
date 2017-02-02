@@ -22,13 +22,20 @@ The following steps are non-automatable and have to be performed manually.
 * Upgrade folium to the latest version (0.2.1)
 """
 
-import tweetAnalysisWrapper
 
-# More naming options are available in the wrapper function, but are abstracted away for neatness sake
+
+# Naming options for tables, intermediates and outputs are available in the wrapper.
 if __name__ == "__main__":
-    tweetAnalysisWrapper.performTweetResearch(defaultdb = "postgres",
-                         user = "user",
-                         password = "user",
-                         ouputdb = "tweetresearch",
-                         tweet_table_name = "tweets",
-                         gather_data = False)
+    import tweetAnalysisWrapper
+    tweetAnalysisWrapper.performTweetResearch(folder_path = r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment",
+                                              defaultdb = "postgres",
+                                              user = "user",
+                                              password = "user",
+                                              ouputdb = "tweet_research",
+                                              tweet_table_name = "tweets",
+                                              gather_data = True,
+                                              loop_gathering = False,
+                                              APP_KEY = "Q530eYJ2divtkAltNRF9ORY6G",
+                                              APP_SECRET =  "xgRzCBf53goOm1ir06spIT8oAmvQFu5kr53ptycDn4CCEw0MYc",
+                                              OAUTH_TOKEN =  "2567730218-I3fdSSmhVi8vDq0zn94OGTnfkpTpPqKpOHaqvD5",
+                                              OAUTH_TOKEN_SECRET = "maoKC8LRS2rxpRmSz9mUbOCTc8TE2VxAaBJQTue2stqQS")

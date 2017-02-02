@@ -12,24 +12,8 @@ import string, json, pprint
 import urllib
 from datetime import datetime
 from datetime import date
-from time import *
 import string, os, sys, subprocess, time
 
-
-# codes to access twitter API. 
-APP_KEY = "Q530eYJ2divtkAltNRF9ORY6G"
-APP_SECRET =  "xgRzCBf53goOm1ir06spIT8oAmvQFu5kr53ptycDn4CCEw0MYc"
-OAUTH_TOKEN =  "2567730218-I3fdSSmhVi8vDq0zn94OGTnfkpTpPqKpOHaqvD5"
-OAUTH_TOKEN_SECRET = "maoKC8LRS2rxpRmSz9mUbOCTc8TE2VxAaBJQTue2stqQS"
-
-# Attempt to establish a connection to the database
-try:
-    con = psycopg2.connect("dbname = tweetresearch user = user password = user" )
-    cur = con.cursor()
-    print "Connected"
-except:
-    print "Database connection error"           
-   
 # Class to process JSON data comming from the twitter stream API. Extract relevant fields
 class MyStreamer(TwythonStreamer):
     def on_success(self, data):
@@ -98,12 +82,11 @@ class MyStreamer(TwythonStreamer):
             if tweet_location != "NaN":
                 g = geocoder.google('{}, {}'.format(tweet_location, tweet_countryname))
                 outlatlon = g.latlng
-
+            
             # Feed data to database defined in beginning of script
             """Table name must be entered manually in case another name is wanted
                 If not, name is the same as specified in "createTable.py"""
-            insert_query = r"""
-                            INSERT INTO tweets VALUES(
+            insert_query = r"INSERT INTO {}".format(tablename) + """ VALUES(
                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """
             data = (tweet_id,
@@ -122,10 +105,27 @@ class MyStreamer(TwythonStreamer):
                     outlatlon[1])
             cur.execute(insert_query, data)
             con.commit()
+            cur.close
+            con.close
             print hyperlink
             print tweet_text
-def TweetsRealTime():
+            
+def TweetsRealTime(dbname, user, password, table_name, APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET, loop_gathering = False):
     """Using your own API keys, connects to the stream and starts gathering data"""
+    try:
+        """Be careful with the following global variables. They are necessary to make this script run from the main function
+           This is because Twython streamer does not allow other inputs.
+           If you run this script stand-alone you can safely remove the globals and it will still work."""
+        global con 
+        con = psycopg2.connect("dbname = {} user = {} password = {}".format(dbname,user,password))
+        global cur
+        cur = con.cursor()
+        global tablename
+        tablename = table_name
+        print "Connected"
+    except:
+        print "Database connection error"    
+    
     try:
         stream = MyStreamer(APP_KEY, APP_SECRET,OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
         print 'Connecting to twitter: will take a minute'
@@ -133,7 +133,7 @@ def TweetsRealTime():
         con.close()
         cur.close()
         print 'Something went wrong while making connection with Twitter: '+str(ValueError)
-    
+
     try:
         stream.statuses.filter(track = ['trump'])   
     except:
@@ -141,7 +141,16 @@ def TweetsRealTime():
         cur.close
         con.close        
         print "########### Stream terminated ###########"
-        TweetsRealTime()  
+        if loop_gathering != False:
+            stream.statuses.filter(track = ['trump'])
         
 if __name__ == '__main__':
-    TweetsRealTime()
+    TweetsRealTime(dbname = "tweets",
+                    user = "user",
+                    password = "user",
+                    table_name = "new",
+                    APP_KEY = "Q530eYJ2divtkAltNRF9ORY6G",
+                    APP_SECRET =  "xgRzCBf53goOm1ir06spIT8oAmvQFu5kr53ptycDn4CCEw0MYc",
+                    OAUTH_TOKEN =  "2567730218-I3fdSSmhVi8vDq0zn94OGTnfkpTpPqKpOHaqvD5",
+                    OAUTH_TOKEN_SECRET = "maoKC8LRS2rxpRmSz9mUbOCTc8TE2VxAaBJQTue2stqQS",
+                    loop_gathering = False)
