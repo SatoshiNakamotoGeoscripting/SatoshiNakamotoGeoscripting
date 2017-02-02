@@ -130,7 +130,7 @@ class tweetMap:
         tweet_cluster = folium.MarkerCluster("Tweets").add_to(self.map)
         
         # Selects a colour based on the value found. Only 5 classes are present due to limited 
-        colors_list = [[1,"blue"],[0.25,"purple"],[0,"white"],[-0.25,"orange"],[-1,"red"]]        
+        colors_list = [[1,"blue"],[0.25,"purple"],[0,"green"],[-0.25,"orange"],[-1,"red"]]        
         color = "black"
         icon_color = "white"
         

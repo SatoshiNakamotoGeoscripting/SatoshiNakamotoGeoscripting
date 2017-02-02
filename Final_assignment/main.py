@@ -37,7 +37,7 @@ if __name__ == "__main__":
                                               password = "user",
                                               ouputdb = "tweet_research",
                                               tweet_table_name = "tweets",
-                                              gather_data = True,
+                                              gather_data = False,
                                               search_terms = ["Trump"],                                              
                                               loop_gathering = False,
                                               APP_KEY = "",

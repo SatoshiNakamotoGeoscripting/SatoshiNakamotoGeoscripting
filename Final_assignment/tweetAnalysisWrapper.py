@@ -35,9 +35,9 @@ def performTweetResearch(folder_path,
                          APP_SECRET = False,
                          OAUTH_TOKEN = False,
                          OAUTH_TOKEN_SECRET = False):
-    """Wrapper function that """                              
+    """Wrapper function that connects to Twitter and visualizes the outcomes"""                              
                              
-"""~~~ Abstracted table names ~~~"""            
+    """~~~ Abstracted table names ~~~"""            
     # Abstracted table names
     sentiment_table_name = "sentiment"
     geojson_name = "countries.geo.json"
@@ -45,7 +45,7 @@ def performTweetResearch(folder_path,
     output_geojson_name = "tweetspercountry.geojson"
     output_html_name = "tweets"                 
                  
-"""~~~ Switch directories to load & dump data ~~~""" 
+    """~~~ Switch directories to load & dump data ~~~""" 
     import os
     os.chdir(folder_path)
     from lib import gatherData
@@ -56,7 +56,7 @@ def performTweetResearch(folder_path,
     os.chdir(folder_path + r"/data")
 
     
-"""~~~ Database creation - creates a dedicated database if specified ~~~"""
+    """~~~ Database creation - creates a dedicated database if specified ~~~"""
     dataManagement.createDatabase(default_dbname = defaultdb,
                                   new_dbname = ouputdb,
                                   user = user,
@@ -87,7 +87,7 @@ def performTweetResearch(folder_path,
         else:
             print "Twitter API tokens have not been specified. If you do not have them, make an account at developer.twitter.com and make a new application"
     
-"""~~~ Sentiment Analysis - Adds sentiment data to the previously created Twitter table ~~~"""
+    """~~~ Sentiment Analysis - Adds sentiment data to the previously created Twitter table ~~~"""
     
     # Retrieve only English Tweets as Vader can only process English
     sql = "SELECT * FROM {table} WHERE lang = 'en' or lower(lang) = 'en-GB' or lower(lang) = 'en-US'".format(table = tweet_table_name)
@@ -115,7 +115,7 @@ def performTweetResearch(folder_path,
                                      list_columns = ["label","sentiment"],
                                      list_type=["varchar(15)", "numeric"])
     
-"""~~~ Visualization staging - Prepare data for visualising by performing spatial queries & conversions ~~~"""
+    """~~~ Visualization staging - Prepare data for visualising by performing spatial queries & conversions ~~~"""
     visualising_tweets = dataManagement.getTweetsFromDB(dbname = ouputdb,
                                              username = "user",
                                              password = "user",
@@ -138,7 +138,7 @@ def performTweetResearch(folder_path,
                                               password = password,
                                               output_filename = output_geojson_name)                                              
     
-"""~~~ Visualizing tweets - Using the tweetMap class, visualize Tweets ~~~"""
+    """~~~ Visualizing tweets - Using the tweetMap class, visualize Tweets ~~~"""
     filtered_tweets = dataManagement.filterTweetsToData(visualising_tweets)
     twitter_map = visualizeData.tweetMap(filtered_tweets, 3, "cartodbpositron")
     twitter_map.addTweets()
