@@ -110,7 +110,7 @@ class MyStreamer(TwythonStreamer):
             print hyperlink
             print tweet_text
             
-def TweetsRealTime(dbname, user, password, table_name, APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET, loop_gathering = False):
+def TweetsRealTime(dbname, user, password, table_name, APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET, loop_gathering = False, search_terms = ["Happy"]):
     """Using your own API keys, connects to the stream and starts gathering data"""
     try:
         """Be careful with the following global variables. They are necessary to make this script run from the main function
@@ -135,22 +135,23 @@ def TweetsRealTime(dbname, user, password, table_name, APP_KEY, APP_SECRET, OAUT
         print 'Something went wrong while making connection with Twitter: '+str(ValueError)
 
     try:
-        stream.statuses.filter(track = ['trump'])   
+        stream.statuses.filter(track = search_terms)   
     except:
         # Shortcut to restarting the script - if the connection cancels then it gracefully terminates the db lock and establishes a new connection
         cur.close
         con.close        
         print "########### Stream terminated ###########"
         if loop_gathering != False:
-            stream.statuses.filter(track = ['trump'])
+            stream.statuses.filter(track = search_terms)
         
 if __name__ == '__main__':
     TweetsRealTime(dbname = "tweets",
                     user = "user",
                     password = "user",
                     table_name = "new",
-                    APP_KEY = "Q530eYJ2divtkAltNRF9ORY6G",
-                    APP_SECRET =  "xgRzCBf53goOm1ir06spIT8oAmvQFu5kr53ptycDn4CCEw0MYc",
-                    OAUTH_TOKEN =  "2567730218-I3fdSSmhVi8vDq0zn94OGTnfkpTpPqKpOHaqvD5",
-                    OAUTH_TOKEN_SECRET = "maoKC8LRS2rxpRmSz9mUbOCTc8TE2VxAaBJQTue2stqQS",
-                    loop_gathering = False)
+                    APP_KEY = "",
+                    APP_SECRET =  "",
+                    OAUTH_TOKEN =  "",
+                    OAUTH_TOKEN_SECRET = "",
+                    loop_gathering = False,
+                    search_terms = ["Happy"])

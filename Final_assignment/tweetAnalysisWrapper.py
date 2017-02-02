@@ -29,30 +29,34 @@ def performTweetResearch(folder_path,
                          ouputdb = "tweetresearch",
                          tweet_table_name = "tweets",
                          gather_data = False,
+                         search_terms = ["Trump"],
                          loop_gathering = False,
                          APP_KEY = False,
                          APP_SECRET = False,
                          OAUTH_TOKEN = False,
                          OAUTH_TOKEN_SECRET = False):
-    # Change working directory to load scripts if needed
-    import os
-    os.chdir(folder_path)
-    
-    from lib import gatherData
-    from lib import dataManagement
-    from lib import sentimentAnalyzerVader
-    from lib import storeSentimentData
-    from lib import visualizeData
-    
-    os.chdir(folder_path + r"/data")
-    """Wrapper function that abstracts database creation, table names and other variables that are tedious to set"""
+    """Wrapper function that """                              
+                             
+"""~~~ Abstracted table names ~~~"""            
     # Abstracted table names
     sentiment_table_name = "sentiment"
     geojson_name = "countries.geo.json"
     polygon_table_name = "countrydata"
     output_geojson_name = "tweetspercountry.geojson"
-    output_html_name = "tweets"
+    output_html_name = "tweets"                 
+                 
+"""~~~ Switch directories to load & dump data ~~~""" 
+    import os
+    os.chdir(folder_path)
+    from lib import gatherData
+    from lib import dataManagement
+    from lib import sentimentAnalyzerVader
+    from lib import storeSentimentData
+    from lib import visualizeData
+    os.chdir(folder_path + r"/data")
+
     
+"""~~~ Database creation - creates a dedicated database if specified ~~~"""
     dataManagement.createDatabase(default_dbname = defaultdb,
                                   new_dbname = ouputdb,
                                   user = user,
@@ -68,12 +72,13 @@ def performTweetResearch(folder_path,
                                          table_name = tweet_table_name,
                                          overwrite = False)
     
-    if gather_data != False: # In case a different output_dbname is specified, alter the getData script to connect to the other database instead
+    if gather_data != False:
         if OAUTH_TOKEN_SECRET != False:
             gatherData.TweetsRealTime(dbname = ouputdb,
                                         user = user,
                                         password = password,
                                         table_name = tweet_table_name,
+                                        search_terms = ["Trump"],
                                         APP_KEY = APP_KEY,
                                         APP_SECRET =  APP_SECRET,
                                         OAUTH_TOKEN =  OAUTH_TOKEN,
@@ -82,27 +87,27 @@ def performTweetResearch(folder_path,
         else:
             print "Twitter API tokens have not been specified. If you do not have them, make an account at developer.twitter.com and make a new application"
     
-    """Retrieve tweets for further sentiment analysis, selecting only those in english because the sentiment library understands English only"""
+"""~~~ Sentiment Analysis - Adds sentiment data to the previously created Twitter table ~~~"""
+    
+    # Retrieve only English Tweets as Vader can only process English
     sql = "SELECT * FROM {table} WHERE lang = 'en' or lower(lang) = 'en-GB' or lower(lang) = 'en-US'".format(table = tweet_table_name)
     retrieved_tweets = dataManagement.getTweetsFromDB(ouputdb, user, password, sql)
-    
-    """Sentiment analysis"""
     analysed_tweets = sentimentAnalyzerVader.SentimentAnalyzer(retrieved_tweets)
     
     """Store in another table of the database the sentiment data just created and then add it to the original Tweetstable"""
-    storeSentimentData.createSentimentTable(dbname = ouputdb,
+    storeSentimentData.createSentimentTable(dbname = ouputdb, #Creates a separate database to stage sentiments
                                            user = user,
                                            password = password,
                                            table_name = sentiment_table_name,
                                            overwrite = False)
                                    
-    storeSentimentData.insertSentiments(dbname = ouputdb,
+    storeSentimentData.insertSentiments(dbname = ouputdb, # Inserts the sentiment into a separate database
                                         user = user,
                                         password = password,
                                         table_name = sentiment_table_name,
                                         sentiment_tweets = analysed_tweets)
                                         
-    storeSentimentData.updateColumns(dbname = ouputdb,
+    storeSentimentData.updateColumns(dbname = ouputdb, # Re-joins the sentiment data back onto the original data
                                      user = user,
                                      password = password,
                                      tweets_table = tweet_table_name,
@@ -110,7 +115,7 @@ def performTweetResearch(folder_path,
                                      list_columns = ["label","sentiment"],
                                      list_type=["varchar(15)", "numeric"])
     
-    """Visualize data"""
+"""~~~ Visualization staging - Prepare data for visualising by performing spatial queries & conversions ~~~"""
     visualising_tweets = dataManagement.getTweetsFromDB(dbname = ouputdb,
                                              username = "user",
                                              password = "user",
@@ -133,6 +138,7 @@ def performTweetResearch(folder_path,
                                               password = password,
                                               output_filename = output_geojson_name)                                              
     
+"""~~~ Visualizing tweets - Using the tweetMap class, visualize Tweets ~~~"""
     filtered_tweets = dataManagement.filterTweetsToData(visualising_tweets)
     twitter_map = visualizeData.tweetMap(filtered_tweets, 3, "cartodbpositron")
     twitter_map.addTweets()
@@ -141,11 +147,3 @@ def performTweetResearch(folder_path,
     twitter_map.addLayerControl()
     twitter_map.saveMap(output_html_name)
     twitter_map.saveMap(output_html_name)
-
-if __name__ == "__main__":
-    performTweetResearch(defaultdb = "postgres",
-                         user = "user",
-                         password = "user",
-                         ouputdb = "tweets",
-                         tweet_table_name = "trumptweets2",
-                         gather_data = False)
