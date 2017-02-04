@@ -33,13 +33,13 @@ if __name__ == "__main__":
     import tweetAnalysisWrapper
     tweetAnalysisWrapper.performTweetResearch(folder_path = r"/home/user/git/SatoshiNakamotoGeoscripting/Final_assignment",
                                               defaultdb = "postgres", # Making a new database requires connecting to an existing database
-                                              user = "user",
-                                              password = "user",
+                                              user = "user", # PostgreSQL username (user is default value on OSGeo Live)
+                                              password = "user", # PostgreSQL password (user is default on OSGeo Live)
                                               ouputdb = "tweet_research", # Specify the output database that is to be created
                                               tweet_table_name = "tweets", # Output table where the Tweets are stored
                                               gather_data = True, # When True: Will gather data from the Twitter stream
                                               search_terms = ["Trump"], # Twitter terms to search for                                   
-                                              loop_gathering = False, # When True: Will not stop when terminated - use for prolonged gathering
+                                              loop_gathering = False, # When True: Will not stop gathering when terminated - use for prolonged gathering
                                               APP_KEY = "", # Get these from developer.twitter.com when you make your application
                                               APP_SECRET =  "",
                                               OAUTH_TOKEN =  "",
