@@ -14,7 +14,7 @@ Non-standard dependencies:
 
 TO DO BEFOREHAND:
 The following steps are non-automatable and have to be performed manually.
-* Have the NLTK vader lexicon locally (nltk.download("vader"))
+* Have the NLTK vader lexicon locally (nltk.download("vader_lexicon"))
 * Have PostGIS installed on PostgreSQL
 * Set the file paths specified below to wherever your folder is
 * Upgrade folium to the latest version (0.2.1)
